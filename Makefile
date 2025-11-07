@@ -3,6 +3,9 @@ CC := clang
 CFLAGS := -Wall -Wextra -O2 -g
 LDFLAGS :=
 
+
+
+
 BINDIR := bin
 BUILDDIR := build
 
