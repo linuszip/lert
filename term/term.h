@@ -5,11 +5,11 @@
 #include <sys/ioctl.h>
 
 #define TC_RESET       "\x1B[0m"
-#define TC_BLACK 	   "\x1B[30m"
+#define TC_BLACK 	     "\x1B[30m"
 #define TC_BLACK_BG    "\x1B[40m"
 #define TC_RED 	       "\x1B[31m"
 #define TC_RED_BG 	   "\x1B[41m"
-#define TC_GREEN 	   "\x1B[32m"
+#define TC_GREEN 	     "\x1B[32m"
 #define TC_GREEN_BG    "\x1B[42m"
 #define TC_YELLOW 	   "\x1B[33m"
 #define TC_YELLOW_BG   "\x1B[43m"
