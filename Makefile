@@ -1,10 +1,10 @@
 CC = cc
 
-CFLAGS = -Wall -Wextra -Werror -g
+CFLAGS = -Wall -Wextra  -g
 
 
 all: term.c term.h
-	$(CC) $(CFLAGS) -c term.c -o lert
+	$(CC) $(CFLAGS) term.c -o lert
 
 clean:
 	rm lert

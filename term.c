@@ -4,27 +4,33 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <time.h>
 
 struct termios BACKUP_TTY;
 
-wchar_t s[3][11] = {
-                    {L'q', L'w', L'e', L'r', L't', L'z', L'u', L'i', L'o', L'p', L'ü'},
-                    {L'a', L's', L'd', L'f', L'g', L'h', L'j', L'k', L'l', L'ö', L'ä'},
-                    {L'y', L'x', L'c', L'v', L'b', L'n', L'm', L',', L'.', L'-', L' '}
-                   };
+const char *alphabet[] = {
+        "a","b","c","d","e","f","g","h","i","j","k","l","m",
+        "n","o","p","q","r","s","t","u","v","w","x","y","z",
+        "ä","ö","ü"
+    };
+
+const int alpha_size = 29;
+
+const int word_len = 4;
 
 
-
-int rndChar(char *s) {
-  if (!s) {
+int newWord(char* word, int len) {
+  if (!word) {
     return 0;
   }
-
-  int x = rand() % 3;
-  switch: x
-    case: 0
-
+  if (len < 13) {
+    return 0;
+  }
+  word[0] = '\0';
+  for (int i = 0; i < 4; i++) {
+    const char *c = alphabet[rand() % alpha_size];
+    strcat(word, c);
+  }
   return 1;
 }
 
@@ -78,24 +84,35 @@ static int restore_tty(int fd) {
 
 
 int main() {
+  srand(time(NULL));
 
-  int rows = 0;
-  int cols = 0;
+  // new_tty(STDIN_FILENO);
+  // tc_enable_alt_buff();
   // clear_screen();
-  tc_enable_alt_buff();
-  clear_screen();
-  puts(TC_RED);
-  tc_get_size(&rows, &cols);
-  int rows_2 = rows /2;
-  tc_move_cursor((cols -39)/2, rows_2 - 2);
-  printf("söjk kgad ksjä ököa löfö ddsa kjfs äglj\n\n");
-  tc_move_cursor((cols -39)/2, rows_2);
-  puts("Dies tippt der User");
-  while (!getchar())   {
+  // puts(TC_RED);
+  // tc_get_size(&rows, &cols);
+  // int rows_2 = rows /2;
+  // tc_move_cursor((cols -39)/2, rows_2 - 2);
+  // printf("söjk kgad ksjä ököa löfö ddsa kjfs äglj\n\n");
+  // tc_move_cursor((cols -39)/2, rows_2);
+  //
+
+  for (int i = 0; i < 4; i++) {
+    char* c = malloc(13);
+    newWord(c, 13);
+    printf("%s ", c);
+    free(c);
+  }
+
+  // while (!getchar())   {
     
-  }  
-  puts(TC_RESET);
-  tc_disable_alt_buff();
+  // }  
+  // puts(TC_RESET);
+  // tc_disable_alt_buff();
+  // restore_tty(STDIN_FILENO);
+  //
+
+
   return EXIT_SUCCESS;
 }
 
