@@ -32,6 +32,8 @@
 
 #define tc_move_cursor(x,y) printf("\x1B[%d;%df", y, x)
 
+#define min(x,y)  (((x) < (y)) ? (x) : (y))
+
 void tc_get_size(int* rows, int *cols);
 
 
