@@ -45,6 +45,22 @@ int utf8_char_len(char c) {
   return -1;
 }
 
+int check_input(char *current_word, char input, int pos) {
+  int input_len = utf8_char_len(input);
+  char s[13];
+  s[0] = input;
+  s[1] = '\0';
+  char c[2];
+  c[1] = '\0';
+  
+  while (input_len-- > 1) {
+    read(STDIN_FILENO, &c, 1);
+    strcat(s, c);
+  }                    
+
+  return strncmp(current_word, s, min(strlen(s), strlen(current_word)));
+}
+
 
 int new_tty(int fd) {
 
@@ -85,21 +101,6 @@ void tc_get_size(int* rows, int *cols) {
   *cols = size.ws_col;
 }
 
-int check_input(char *current_word, char input, int pos) {
-  int input_len = utf8_char_len(input);
-  char s[13];
-  s[0] = input;
-  s[1] = '\0';
-  char c[2];
-  c[1] = '\0';
-  
-  while (input_len-- > 1) {
-    read(STDIN_FILENO, &c, 1);
-    strcat(s, c);
-  }                    
-
-  return strncmp(current_word, s, min(strlen(s), strlen(current_word)));
-}
 
 
 static int restore_tty(int fd) {
@@ -123,12 +124,13 @@ int main() {
   // tc_move_cursor((cols -39)/2, rows_2);
 
   puts("strncmp test");
-  char s1[] = "lüöp\0";
-  char s2[] = "lüöp\0";
+  char s1[] = "üöp\0";
+  char s2[4];
+  s[0] = 0x; // 11000011 101111000000000000000000
 
   puts(s1);
   puts(s2);
-  printf("strcmp(s1, s2) = %d", strcmp(s1, s2));
+  printf("strncmp(s1, s2) = %d\n", strcmp(s1, s2));
 
   // while (!getchar())   {
     
@@ -137,16 +139,11 @@ int main() {
   // tc_disable_alt_buff();
   // restore_tty(STDIN_FILENO);
   //
-  puts("Char len test");
+  //
 
-  char *c = "s\0";
-  char *l = "ß\0";
-  char *s = "ü\0";
-  int len_s = utf8_char_len(s[0]);
-  int len_c = utf8_char_len(c[0]);
-  int len_l = utf8_char_len(l[0]);
+  puts("strlen test");
+  printf("s = %s \nstrlen(s1) = %d", s1, strlen)
 
-  printf("c = %s \nlen(x) = %d\nl = %s\nlen(l) = %d\ns=%s\nlen(s)=%d\n", c, len_c, l, len_l, s, len_s);
 
 
 
