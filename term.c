@@ -21,10 +21,10 @@ const int word_len = 4;
 
 int newWord(char* word, int len) {
   if (!word) {
-    return 0;
+    return -1;
   }
   if (len < 13) {
-    return 0;
+    return -1;
   }
   word[0] = '\0';
   for (int i = 0; i < 4; i++) {
@@ -35,7 +35,7 @@ int newWord(char* word, int len) {
 }
 
 
-int utf8_char_len(char c) {
+int utf8_char_memlen(char c) {
   unsigned char n = (unsigned char) c;
   if (n < 0x80) return 1; // Ascii char
   else if ((n >> 5) == 0x6) return 2; // c = 110xxxxx >> 5 = 00000110
@@ -45,8 +45,8 @@ int utf8_char_len(char c) {
   return -1;
 }
 
-int check_input(char *current_word, char input, int pos) {
-  int input_len = utf8_char_len(input);
+int check_input(char *current_word, char input, int index) {
+  int input_len = utf8_char_memlen(input);
   char s[13];
   s[0] = input;
   s[1] = '\0';
@@ -58,7 +58,7 @@ int check_input(char *current_word, char input, int pos) {
     strcat(s, c);
   }                    
 
-  return strncmp(current_word, s, min(strlen(s), strlen(current_word)));
+  return strncmp(current_word + index, s, min(strlen(s), strlen(current_word)));
 }
 
 
@@ -112,40 +112,36 @@ static int restore_tty(int fd) {
 
 
 int main() {
+
+/*
+  int rows, cols;
+  tc_get_size(&rows, &cols);
+  int rows_2 = rows /2;
+  
   srand(time(NULL));
-  // new_tty(STDIN_FILENO);
-  // tc_enable_alt_buff();
-  // clear_screen();
-  // puts(TC_RED);
-  // tc_get_size(&rows, &cols);
-  // int rows_2 = rows /2;
-  // tc_move_cursor((cols -39)/2, rows_2 - 2);
-  // printf("söjk kgad ksjä ököa löfö ddsa kjfs äglj\n\n");
-  // tc_move_cursor((cols -39)/2, rows_2);
+  new_tty(STDIN_FILENO);
+  tc_enable_alt_buff();
+  clear_screen();
+  puts(TC_RED);
 
-  puts("strncmp test");
-  char s1[] = "üöp\0";
-  char s2[4];
-  s[0] = 0x; // 11000011 101111000000000000000000
+  char * c = malloc(sizeof(char) * 40);
+  *c = '\0';
+  for (int i = 0; i < 4; i++) {
+    char *s = malloc(sizeof(char) * 12);
+    if (newWord(s, 12) != 0) {
+      return -1;
+    }
+    strcat(c, s);
+  }
+  printf("%s", c);
+  tc_move_cursor((cols -39)/2, rows_2);
 
-  puts(s1);
-  puts(s2);
-  printf("strncmp(s1, s2) = %d\n", strcmp(s1, s2));
+  puts(TC_RESET);
+  
+  free(c);
 
-  // while (!getchar())   {
-    
-  // }  
-  // puts(TC_RESET);
-  // tc_disable_alt_buff();
-  // restore_tty(STDIN_FILENO);
-  //
-  //
-
-  puts("strlen test");
-  printf("s = %s \nstrlen(s1) = %d", s1, strlen)
-
-
-
+  restore_tty(STDIN_FILENO);
+  */
 
   return EXIT_SUCCESS;
 }
