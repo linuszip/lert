@@ -96,7 +96,7 @@ int new_tty(int fd) {
 */
 void tc_get_size(int* rows, int *cols) {
   struct winsize size;
-  ioctl(1, TIOCGWINSZ, &size);
+  ioctl(STDIN_FILENO, TIOCGWINSZ, &size);
   *rows = size.ws_row;
   *cols = size.ws_col;
 }
@@ -112,36 +112,42 @@ static int restore_tty(int fd) {
 
 
 int main() {
+  /* srand(time(NULL));
 
-/*
   int rows, cols;
   tc_get_size(&rows, &cols);
   int rows_2 = rows /2;
   
   srand(time(NULL));
-  new_tty(STDIN_FILENO);
-  tc_enable_alt_buff();
-  clear_screen();
+  // new_tty(STDIN_FILENO);
+  // tc_enable_alt_buff();
+  // clear_screen();
   puts(TC_RED);
 
   char * c = malloc(sizeof(char) * 40);
   *c = '\0';
   for (int i = 0; i < 4; i++) {
-    char *s = malloc(sizeof(char) * 12);
-    if (newWord(s, 12) != 0) {
+    char *s = malloc(sizeof(char) * 13);
+    if (newWord(s, 13) != 0) {
       return -1;
     }
     strcat(c, s);
+    free(s);
   }
-  printf("%s", c);
-  tc_move_cursor((cols -39)/2, rows_2);
-
+  printf("\n%s\n", c);
+  // tc_move_cursor((cols -39)/2, rows_2);
+    
   puts(TC_RESET);
   
   free(c);
 
-  restore_tty(STDIN_FILENO);
-  */
+  restore_tty(STDIN_FILENO); */
+
+  char *c = malloc(sizeof(char) * 13);
+
+  srand(time(NULL));
+
+  newWord(c, 13);
 
   return EXIT_SUCCESS;
 }

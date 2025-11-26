@@ -1,10 +1,10 @@
 *
 
-!.sh
-!.h
-!.c
+!*.sh
+!*.h
+!*.c
 !Makefile
 !LICENSE
-!.md
+!*.md
 !.gitignore
 !.gitattributes
