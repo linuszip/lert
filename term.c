@@ -129,6 +129,8 @@ int get_word_count(int rows, int cols) {
   return wc;
 }
 
+// TODO: New Main function with loop while !ESC. Check Input and redraw
+
 
 int main() {
   srand(time(NULL));
