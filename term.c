@@ -31,7 +31,7 @@ int newWord(char* word, int len) {
     const char *c = alphabet[rand() % alpha_size];
     strcat(word, c);
   }
-  return 1;
+  return 0;
 }
 
 
@@ -110,44 +110,76 @@ static int restore_tty(int fd) {
   return 0;
 }
 
+int get_word_count(int rows, int cols) {
+  /*
+    Returns the number of words that fit on the screen respecting some space.
+    Returns an Integer larger or equals to zero, the words that fit the screen.
+    Returns 0 if now words fit.
+  */
+
+  if (cols < 3 | rows < 4) {
+    return 0;
+  }
+  int wc = 1;
+
+  if (rows > 12) {
+    wc = min(8, rows / 12);
+  }
+
+  return wc;
+}
+
 
 int main() {
-  /* srand(time(NULL));
+  srand(time(NULL));
 
   int rows, cols;
   tc_get_size(&rows, &cols);
-  int rows_2 = rows /2;
+  int word_count = get_word_count(rows, cols);
   
+  tc_enable_alt_buff();
   srand(time(NULL));
-  // new_tty(STDIN_FILENO);
-  // tc_enable_alt_buff();
+  new_tty(STDIN_FILENO);
   // clear_screen();
-  puts(TC_RED);
+  printf(TC_RED);
 
-  char * c = malloc(sizeof(char) * 40);
-  *c = '\0';
-  for (int i = 0; i < 4; i++) {
-    char *s = malloc(sizeof(char) * 13);
-    if (newWord(s, 13) != 0) {
-      return -1;
+  char *s, *c;
+  c = malloc(sizeof(char) * 5 * word_count);
+  char *user_input = malloc(sizeof(char) * 5 * word_count);
+  int i = 0; 
+
+  while (getchar() != 27) {
+    
+
+    c[0] = '\0';
+    for (int i = 0; i < word_count; i++) {
+      s = malloc(sizeof(char) * 13);
+
+      if (newWord(s, 13) != 0) {
+        printf("new Word failed in Iteration %d", i);
+        return -1;
+      }
+      if (i != 0) {
+        strcat(c, " ");
+      }
+      strcat(c, s);
     }
-    strcat(c, s);
-    free(s);
+    printf("\n%s\n", c);
+    clear_screen();  
+
   }
-  printf("\n%s\n", c);
+
+  free(c);
+  free(s);
   // tc_move_cursor((cols -39)/2, rows_2);
     
-  puts(TC_RESET);
   
-  free(c);
 
-  restore_tty(STDIN_FILENO); */
+  restore_tty(STDIN_FILENO);
 
-  char *c = malloc(sizeof(char) * 13);
+  tc_disable_alt_buff();
 
-  srand(time(NULL));
 
-  newWord(c, 13);
 
   return EXIT_SUCCESS;
 }

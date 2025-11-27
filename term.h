@@ -24,11 +24,11 @@
 #define TC_DEFAULT 	   "\x1B[39m"
 #define TC_DEFAULT_BG  "\x1B[49m"
 
-#define clear_screen() puts("\x1B[2J")
+#define clear_screen() printf("\x1B[2J")
 
-#define tc_enable_alt_buff() puts("\x1B[?1049h")
+#define tc_enable_alt_buff() printf("\x1B[?1049h")
 
-#define tc_disable_alt_buff()  puts("\x1B[?1049l")
+#define tc_disable_alt_buff()  printf("\x1B[?1049l")
 
 #define tc_move_cursor(x,y) printf("\x1B[%d;%df", y, x)
 
