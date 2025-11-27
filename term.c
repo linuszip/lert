@@ -148,12 +148,20 @@ int main() {
   char *s, *c;
   c = malloc(sizeof(char) * 5 * word_count);
   char *user_input = malloc(sizeof(char) * 5 * word_count);
-  int i = 0; 
+  int current_index = 0;
 
   while (getchar() != 27) {
-    
 
-    c[0] = '\0';
+    // check input
+    //   - check char
+    //   - change output 
+    //   - i++;
+
+
+    //end reached?, wait for enter, then put new words put i to zero 
+    
+    
+    /* c[0] = '\0';
     for (int i = 0; i < word_count; i++) {
       s = malloc(sizeof(char) * 13);
 
@@ -167,13 +175,12 @@ int main() {
       strcat(c, s);
     }
     printf("\n%s\n", c);
-    clear_screen();  
+    clear_screen(); */  
 
   }
 
-  free(c);
-  free(s);
-  // tc_move_cursor((cols -39)/2, rows_2);
+  // free(c);
+  // free(s);
     
   
 
