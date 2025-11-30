@@ -36,8 +36,5 @@
 
 void tc_get_size(int* rows, int *cols);
 
-
-
-
 #endif
   

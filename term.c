@@ -8,18 +8,32 @@
 
 struct termios BACKUP_TTY;
 
-const char *alphabet[] = {
+
+const char *whole_alphabet[] = {
         "a","b","c","d","e","f","g","h","i","j","k","l","m",
         "n","o","p","q","r","s","t","u","v","w","x","y","z",
         "ä","ö","ü"
-    };
+      };
 
-const int alpha_size = 29;
+const char *upper_row[] = {
+        "q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "ü"
+      };
 
+const char *middle_row[] = {
+        "a", "s", "d", "f", "g", "h", "j", "k", "l", "ö", "ä"
+      };
+
+const char *bottom_row[] = {
+        "y", "x", "c", "v", "b", "n", "m"
+      };
+
+const int wholealpha_size = 29;
+const int upper_row_len = 11;
+const int bottom_row_len = 7;
 const int word_len = 4;
 
 
-int newWord(char* word, int len) {
+int newWord(char **alphabet, unsigned int alphabet_len, char *word, int len) {
   if (!word) {
     return -1;
   }
@@ -28,7 +42,7 @@ int newWord(char* word, int len) {
   }
   word[0] = '\0';
   for (int i = 0; i < 4; i++) {
-    const char *c = alphabet[rand() % alpha_size];
+    const char *c = alphabet[rand() % alphabet_len];
     strcat(word, c);
   }
   return 0;
@@ -132,7 +146,47 @@ int get_word_count(int rows, int cols) {
 // TODO: New Main function with loop while !ESC. Check Input and redraw
 
 
-int main() {
+int main(int args, char **argv) {
+
+  int alpha_size;
+
+  char opt;
+  while ((opt = getopt(args, argv, "hacl123")) != -1) {
+    switch (opt) {
+      case 'a':
+        #define alphabet (whole_alphabet)
+        alpha_size = wholealpha_size;
+        break;
+      case 'c':
+        #define alphabet (whole_alphabet)
+        alpha_size = wholealpha_size;
+        //Somehow start timer
+        break;
+      case 'l':
+        switch (getopt(args, argv, "123")) {
+          case 1:
+            //start level 1
+            break;
+          case 2:
+            //start level 2
+            break;
+          case 3:
+            // start level 3
+            break;
+        }
+        // check for levels
+        // return 1 if needed
+        puts("check for leve");
+        break;
+      case 'h':
+        puts("Print help message"); 
+        return 0;
+      default:
+        //printf default message
+        return 1;
+    }
+  }
+
   srand(time(NULL));
 
   int rows, cols;
