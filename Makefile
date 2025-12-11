@@ -1,10 +1,14 @@
 CC = cc
 
-CFLAGS = -Wall -Wextra  -g
+CFLAGS = -Wall -Wextra -g
+// CFLAGS = -Wall -Wextra -O3
 
 
-all: term.c term.h
-	$(CC) $(CFLAGS) term.c -o lert
+all: lert.c lert.h
+	$(CC) $(CFLAGS) lert.c -o lert
+
+install: all
+	mv ./lert ~/.local/bin
 
 clean:
 	rm lert

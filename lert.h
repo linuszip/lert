@@ -2,7 +2,6 @@
 #ifndef TERM_H
 #define TERM_H
 
-#include <sys/ioctl.h>
 
 #define TC_RESET       "\x1B[0m"
 #define TC_BLACK 	   "\x1B[30m"
@@ -24,6 +23,7 @@
 #define TC_DEFAULT 	   "\x1B[39m"
 #define TC_DEFAULT_BG  "\x1B[49m"
 
+
 #define clear_screen() printf("\x1B[2J")
 
 #define tc_enable_alt_buff() printf("\x1B[?1049h")
@@ -34,7 +34,6 @@
 
 #define min(x,y)  (((x) < (y)) ? (x) : (y))
 
-void tc_get_size(int* rows, int *cols);
 
 #endif
   
