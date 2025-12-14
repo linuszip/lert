@@ -1,7 +1,6 @@
 CC = cc
 
 CFLAGS = -Wall -Wextra -g
-// CFLAGS = -Wall -Wextra -O3
 
 
 all: lert.c lert.h

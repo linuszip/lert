@@ -11,7 +11,8 @@
 struct termios BACKUP_TTY;
 
 const char *USAGE_MESSAGE =
-                      "Usage: lert [FLAGS]\n\nFlags:\n    "
+                      "USAGE:\n"
+                      "    lert [FLAGS]\n\nFLAGS:\n    "
                       "-h            Print help information\n"
                       "    -a            Start in normal mode\n"
                       "    -c            Start in challenge mode\n"
@@ -59,37 +60,39 @@ int utf8_char_memlen(char c) {
 }
 
 
-int newWord(const char **alphabet, unsigned int alphabet_len, char *word, int len) {
+
+char *newWord(const char **alphabet, unsigned int alphabet_len) {
+  size_t len = word_len * 4 + 1;
+  char *word = malloc(sizeof(char) * len);
+
   if (!word) {
-    return -1;
+    return NULL;
   }
-  if (len < 13) {
-    return -1;
-  }
+
   word[0] = '\0';
-  for (int i = 0; i < 4; i++) {
-    const char *c = alphabet[rand() % alphabet_len];
-    strlcat(word, c, len);
-    len -= utf8_char_memlen(*c);
+  char *end = word;
+  int index ;
+  for (int i = 0; i < word_len; i++) {
+    index = rand() % alphabet_len;
+    end = stpcpy(end, alphabet[index]);
   }
-  return 0;
+  return word;
 }
 
 
-int check_input(char *current_word, char input, int index) {
-  int input_len = utf8_char_memlen(input);
-  char s[13];
-  s[0] = input;
-  s[1] = '\0';
-  char c[2];
-  c[1] = '\0';
+int check_input(char *current_word, char *s, int index) {
+  int input_len = utf8_char_memlen(*s);
+  char *p = s+1;
+  int cmp_len = 1;
   
   while (input_len-- > 1) {
-    read(STDIN_FILENO, &c, 1);
-    strcat(s, c);
+    read(STDIN_FILENO, p++, 1);
+    cmp_len++;
   }                    
+  
+  *p = '\0';
 
-  return strncmp(current_word + index, s, min(strlen(s), strlen(current_word)));
+  return strncmp(current_word + index, s, cmp_len);
 }
 
 
@@ -121,17 +124,12 @@ int new_tty(int fd) {
 }
 
 
-/* Hole die Größe des Terminals.
-   TODO: Das Richtige Terminal muss noch ermittelt werden,
-         also ersetze die 1 in ioctl.
-*/
 void tc_get_size(int* rows, int *cols) {
   struct winsize size;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
   *rows = size.ws_row;
   *cols = size.ws_col;
 }
-
 
 
 static int restore_tty(int fd) {
@@ -142,6 +140,14 @@ static int restore_tty(int fd) {
 }
 
 
+void free_words(char *words[], int word_count) {
+  /* Speicher freigeben */
+  for (int i = 0; i < word_count; i++) {
+    free(words[i]);
+  }
+}
+
+
 int get_word_count(int rows, int cols) {
   /*
     Returns the number of words that fit on the screen respecting some space.
@@ -149,7 +155,7 @@ int get_word_count(int rows, int cols) {
     Returns 0 if now words fit.
   */
 
-  if (cols < 4 | rows < 3) {
+  if ((cols < 4) | (rows < 3)) {
     return 0;
   }
   int wc = 1;
@@ -161,14 +167,21 @@ int get_word_count(int rows, int cols) {
   return wc;
 }
 
-// TODO: New Main function with loop while !ESC. Check Input and redraw
+
+void print_words(char *words[], int word_count) {
+  for (int i = 0; i < word_count; i++) {
+    printf("%s ", words[i]);
+  }
+  fflush(stdout);
+}
+
 
 
 int main(int args, char **argv) {
 
-  int alpha_size;
+  int alpha_size = wholealpha_size;
   int level = 0;
-  const char **alphabet;
+  const char **alphabet = whole_alphabet;
   char opt, *end;
 
   long intermediate_level;
@@ -208,7 +221,7 @@ int main(int args, char **argv) {
             alpha_size = middle_row_len;
             break;
           case 2:
-            alphabet = level_two; //TODO: add middle and top row 
+            alphabet = level_two; 
             alpha_size = middle_row_len + upper_row_len;
             break;
           case 3:
@@ -236,23 +249,80 @@ int main(int args, char **argv) {
   int cursor_row = rows / 2 - 1;
   int cursor_col = cols / 2 - (5 * word_count - 3) / 2; 
 
-  
   // Generate words
-  unsigned char i = 0;  
-  char *s[word_count];
-  for (int k = 0; k < word_count; k++) {
-    s[k] = malloc(sizeof(char) * 13);
-    s[k][0] = '\0';
-    newWord(alphabet, alpha_size, s[k], 13);
+  char *words[word_count];
+  for (int j = 0; j < word_count; j++) {
+    words[j] = newWord(alphabet, alpha_size);
+  }
+  
+  tc_enable_alt_buff();
+  new_tty(STDIN_FILENO);
+  clear_screen();
+  tc_move_cursor(cursor_col, cursor_row);
+  print_words(words, word_count);
+  tc_move_cursor(cursor_col, cursor_row + 2);
+  fflush(stdout);
+
+  char input_char; // User input
+  int index = 0; // Which char to check right now 
+  int spaces;
+
+
+  while (1) {
+    if (read(STDIN_FILENO, &input_char, 1) < 1) {
+      /* If read failed */
+      free_words(words, word_count);
+      fprintf(stderr, "Error during read");
+      restore_tty(STDIN_FILENO);
+      tc_disable_alt_buff();
+      return EXIT_FAILURE;
+    }
+
+    if (input_char == 27) {
+      /* User pressed escape */
+      free_words(words, word_count);
+      restore_tty(STDIN_FILENO);
+      tc_disable_alt_buff();
+      return EXIT_SUCCESS;
+    }
+
+    // if (input_char == 32) {
+    //   spaces++;
+    //   tc_move_cursor(cursor_col + index + spaces, cursor_row + 2);
+    //   fflush(stdout);
+    //   continue;
+    // }
+
+    // if (index == (word_count * word_len + word_count)) {
+    //   free_words(words, word_count);
+    //   clear_screen();
+    //   for (int j = 0; j < word_count; j++) {
+    //     words[j] = newWord(alphabet, alpha_size);        
+    //   }
+    //   tc_move_cursor(cursor_col, cursor_row);
+    //   print_words(words, word_count);
+    //   index = 0;
+    //   tc_move_cursor(cursor_col, cursor_row + 2);
+    // }
+
+
+    char *user_input =  malloc(sizeof(char) * 13);
+    *user_input = input_char;
+    div_t q = div(index, 4);
+    if (check_input(words[q.quot], user_input, q.rem) == 0) {
+      printf("%s%s%s", TC_GREEN, user_input, TC_RESET);
+      fflush(stdout);
+    } else {
+      printf("%s%s%s", TC_RED, user_input, TC_RESET);
+      fflush(stdout);
+    }
+
+    index++;
+    free(user_input);
+    tc_move_cursor(cursor_col + index + spaces, cursor_row + 2);
+
   }
 
-  // for (int j = 0; j < word_count; j++) {
-  //   printf("%s ", s[j]);
-  // } 
-
-
-  // while (getchar() != 27) {
-  // }
     // check input
     //   - check char
     //   - change output 
@@ -261,22 +331,7 @@ int main(int args, char **argv) {
 
     //end reached?, wait for enter, then put new words put i to zero 
 
-  
-  
-  tc_enable_alt_buff();
-  new_tty(STDIN_FILENO);
-  clear_screen();
-  printf(TC_RED);
 
-  // char *s, *c;
-  // c = malloc(sizeof(char) * 5 * word_count);
-  // char *user_input = malloc(sizeof(char) * 5 * word_count);
-  // int current_index = 0;
-
-  // tc_move_cursor(cursor_col, cursor_row);
-  printf("HALD AKLS KAAL SJDA KSLA KLSA KLSS LASJ");
-  while (getchar() != 27) {
-  }
   restore_tty(STDIN_FILENO);
   tc_disable_alt_buff();
   return EXIT_SUCCESS;
