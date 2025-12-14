@@ -286,24 +286,24 @@ int main(int args, char **argv) {
       return EXIT_SUCCESS;
     }
 
-    // if (input_char == 32) {
-    //   spaces++;
-    //   tc_move_cursor(cursor_col + index + spaces, cursor_row + 2);
-    //   fflush(stdout);
-    //   continue;
-    // }
+    if (input_char == 32) {
+      spaces++;
+      tc_move_cursor(cursor_col + index + spaces, cursor_row + 2);
+      fflush(stdout);
+      continue;
+    }
 
-    // if (index == (word_count * word_len + word_count)) {
-    //   free_words(words, word_count);
-    //   clear_screen();
-    //   for (int j = 0; j < word_count; j++) {
-    //     words[j] = newWord(alphabet, alpha_size);        
-    //   }
-    //   tc_move_cursor(cursor_col, cursor_row);
-    //   print_words(words, word_count);
-    //   index = 0;
-    //   tc_move_cursor(cursor_col, cursor_row + 2);
-    // }
+    if (index == (word_count * word_len + word_count)) {
+      free_words(words, word_count);
+      clear_screen();
+      for (int j = 0; j < word_count; j++) {
+        words[j] = newWord(alphabet, alpha_size);        
+      }
+      tc_move_cursor(cursor_col, cursor_row);
+      print_words(words, word_count);
+      index = 0;
+      tc_move_cursor(cursor_col, cursor_row + 2);
+    }
 
 
     char *user_input =  malloc(sizeof(char) * 13);
