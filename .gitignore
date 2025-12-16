@@ -3,8 +3,10 @@
 !*.sh
 !*.h
 !*.c
+!src
 !Makefile
 !LICENSE
 !*.md
 !.gitignore
 !.gitattributes
+

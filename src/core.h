@@ -25,15 +25,21 @@
 
 
 #define clear_screen() printf("\x1B[2J")
-
 #define tc_enable_alt_buff() printf("\x1B[?1049h")
-
 #define tc_disable_alt_buff()  printf("\x1B[?1049l")
-
 #define tc_move_cursor(x,y) printf("\x1B[%d;%df", y, x)
-
 #define min(x,y)  (((x) < (y)) ? (x) : (y))
 
+
+int utf8_char_memlen(char c);
+char *newWord(const char **alphabet, unsigned int alphabet_len);
+int check_input(char *current_word, char *s, int index);
+int new_tty(int fd);
+void tc_get_size(int* rows, int *cols);
+int restore_tty(int fd);
+void free_words(char *words[], int word_count);
+int get_word_count(int rows, int cols);
+void print_words(char *words[], int word_count);
 
 #endif
   
