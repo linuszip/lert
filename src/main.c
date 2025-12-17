@@ -98,7 +98,7 @@ int main(int args, char **argv)
 
   char input_char; // User input
   int index = 0; // Which char to check right now 
-  int spaces = 0;
+  int pos = 0;
 
 
   while (1) {
@@ -120,10 +120,11 @@ int main(int args, char **argv)
     }
 
     if (input_char == 32) {
-      spaces++;
-      tc_move_cursor(cursor_col + index + spaces, cursor_row + 2);
+      pos++;
+      
+      tc_move_cursor(cursor_col + pos, cursor_row + 2);
       fflush(stdout);
-      if (((index + 1) % 5) == 0) {
+      if (((pos + 1) % 5) != 0) {
         index++;
       }
       continue;
@@ -138,6 +139,7 @@ int main(int args, char **argv)
       tc_move_cursor(cursor_col, cursor_row);
       print_words(words, word_count);
       index = 0;
+      pos = 0;
       tc_move_cursor(cursor_col, cursor_row + 2);
     }
 
@@ -147,15 +149,17 @@ int main(int args, char **argv)
     div_t q = div(index, 4);
     if (check_input(words[q.quot], user_input, q.rem) == 0) {
       printf("%s%s%s", TC_GREEN, user_input, TC_RESET);
+      index++;
       fflush(stdout);
     } else {
+      index++;
       printf("%s%s%s", TC_RED, user_input, TC_RESET);
       fflush(stdout);
     }
 
-    index++;
+    pos++;
     free(user_input);
-    tc_move_cursor(cursor_col + index + spaces, cursor_row + 2);
+  tc_move_cursor(cursor_col + pos, cursor_row + 2);
 
   }
 
