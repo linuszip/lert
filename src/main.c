@@ -111,6 +111,7 @@ int main(int args, char **argv)
       return EXIT_FAILURE;
     }
 
+
     if (input_char == 27) {
       /* User pressed escape */
       free_words(words, word_count);
@@ -119,18 +120,15 @@ int main(int args, char **argv)
       return EXIT_SUCCESS;
     }
 
-    if (input_char == 32) {
+
+    if (((pos + 1) % 5) == 0) {
       pos++;
-      
       tc_move_cursor(cursor_col + pos, cursor_row + 2);
       fflush(stdout);
-      if (((pos + 1) % 5) != 0) {
-        index++;
-      }
-      continue;
     }
 
-    if (index == (word_count * word_len + word_count)) {
+
+    if (index == (word_count * word_len + word_count - 1)) {
       free_words(words, word_count);
       clear_screen();
       for (int j = 0; j < word_count; j++) {
@@ -141,10 +139,16 @@ int main(int args, char **argv)
       index = 0;
       pos = 0;
       tc_move_cursor(cursor_col, cursor_row + 2);
+      fflush(stdout);
+      continue;
     }
 
 
-    char *user_input =  malloc(sizeof(char) * 13);
+    tc_move_cursor(cursor_col, cursor_row + 4);
+    printf("index: %d, pos: %d", index, pos);
+    fflush(stdout);
+
+    char *user_input =  malloc(sizeof(char) * 5);
     *user_input = input_char;
     div_t q = div(index, 4);
     if (check_input(words[q.quot], user_input, q.rem) == 0) {
@@ -159,18 +163,19 @@ int main(int args, char **argv)
 
     pos++;
     free(user_input);
-  tc_move_cursor(cursor_col + pos, cursor_row + 2);
+    tc_move_cursor(cursor_col + pos, cursor_row + 2);
 
   }
 
+  free_words(words, word_count);
     // check input
+    // free_words(char **words, int word_count)words
     //   - check char
     //   - change output 
     //   - i++;
 
 
-    //end reached?, wait for enter, then put new words put i to zero 
-
+    //end reached?, wait for enter, then put new words pword_count
 
   restore_tty(STDIN_FILENO);
   tc_disable_alt_buff();
