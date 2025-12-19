@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <string.h>
 #include <termios.h>
+#include <ctype.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -11,14 +12,29 @@
 struct termios BACKUP_TTY;
 
 
+
 int utf8_char_memlen(char c) {
+  /*
+  Returns the memory length of an utf-8 char, when given the first byte
+  Returns a positive integer, the length, else 0, if it is not a valid
+  utf-8 char.
+  */
   unsigned char n = (unsigned char) c;
   if (n < 0x80) return 1; // Ascii char
   else if ((n >> 5) == 0x6) return 2; // c = 110xxxxx >> 5 = 00000110
   else if ((n >> 4) == 0xE) return 3; // c = 1110xxxx >
   else if ((n >> 3) == 0x1E) return 4; // c 11110xxx
 
-  return -1;
+  return 0;
+}
+
+int valid_input(char c) {
+  int len = utf8_char_memlen(c);
+
+  if (len == 1) {
+    return isalnum(c);
+  }
+  return 1;
 }
 
 
@@ -51,10 +67,9 @@ int check_input(char *current_word, char *s, int index) {
     read(STDIN_FILENO, p++, 1);
     // cmp_len++;
   }                    
-  
   *p = '\0';
-  
-  return strncmp(current_word + index, s, p - s - 1);
+
+  return strncmp(current_word + index, s, p - s);
 }
 
 

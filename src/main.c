@@ -1,9 +1,5 @@
 #include "core.h"
 #include "globals.h"
-#include <limits.h>
-#include <string.h>
-#include <termios.h>
-#include <sys/ioctl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -99,8 +95,7 @@ int main(int args, char **argv)
   char input_char; // User input
   int index = 0; // Which char to check right now 
   int pos = 0;
-
-
+  int words_index = 0;
   while (1) {
     if (read(STDIN_FILENO, &input_char, 1) < 1) {
       /* If read failed */
@@ -121,14 +116,7 @@ int main(int args, char **argv)
     }
 
 
-    if (((pos + 1) % 5) == 0) {
-      pos++;
-      tc_move_cursor(cursor_col + pos, cursor_row + 2);
-      fflush(stdout);
-    }
-
-
-    if (index == (word_count * word_len + word_count - 1)) {
+    if (pos == (word_count * word_len + word_count - 1)) {
       free_words(words, word_count);
       clear_screen();
       for (int j = 0; j < word_count; j++) {
@@ -138,32 +126,56 @@ int main(int args, char **argv)
       print_words(words, word_count);
       index = 0;
       pos = 0;
+      words_index = 0;
       tc_move_cursor(cursor_col, cursor_row + 2);
       fflush(stdout);
       continue;
     }
 
+    
+    if (((pos + 1) % 5) == 0) {
+      pos++;
+      words_index++;
+      index = 0;
+      tc_move_cursor(cursor_col + pos, cursor_row + 2);
+      fflush(stdout);
+      continue;
+    }
 
-    tc_move_cursor(cursor_col, cursor_row + 4);
-    printf("index: %d, pos: %d", index, pos);
-    fflush(stdout);
+
+    if (input_char == 32) {
+      index++;
+      pos++;
+      continue;
+    }
+
+    if (!valid_input(input_char)) {
+      
+    }
+
 
     char *user_input =  malloc(sizeof(char) * 5);
     *user_input = input_char;
     div_t q = div(index, 4);
-    if (check_input(words[q.quot], user_input, q.rem) == 0) {
+    if (check_input(words[words_index], user_input, q.rem) == 0) {
       printf("%s%s%s", TC_GREEN, user_input, TC_RESET);
-      index++;
+      index += utf8_char_memlen(input_char);
       fflush(stdout);
     } else {
-      index++;
+      index += utf8_char_memlen(words[words_index][index]);
       printf("%s%s%s", TC_RED, user_input, TC_RESET);
       fflush(stdout);
     }
+    free(user_input);
+
+
+    tc_move_cursor(cursor_col, cursor_row + 4);
+    printf("words_index: %d, index: %d, pos: %d", words_index, index, pos);
+    tc_move_cursor(cursor_col + pos, cursor_row + 2);
 
     pos++;
-    free(user_input);
     tc_move_cursor(cursor_col + pos, cursor_row + 2);
+    fflush(stdout);
 
   }
 

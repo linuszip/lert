@@ -40,6 +40,7 @@ int restore_tty(int fd);
 void free_words(char *words[], int word_count);
 int get_word_count(int rows, int cols);
 void print_words(char *words[], int word_count);
+int valid_input(char c);
 
 #endif
   
