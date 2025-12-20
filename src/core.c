@@ -58,18 +58,24 @@ char *newWord(const char **alphabet, unsigned int alphabet_len) {
 }
 
 
-int check_input(char *current_word, char *s, int index) {
+void check_input(char *current_word, char *s, int *index) {
   int input_len = utf8_char_memlen(*s);
   char *p = s+1;
-  // int cmp_len = 1;
   
-  while (input_len-- > 1) {
+  for (int i = input_len; i > 1; i--) {
     read(STDIN_FILENO, p++, 1);
-    // cmp_len++;
   }                    
   *p = '\0';
 
-  return strncmp(current_word + index, s, p - s);
+    if (strncmp(current_word + *index, s, p - s) == 0) {
+      fputs(TC_GREEN, stdout); fputs(s, stdout); fputs(TC_RESET, stdout);
+      fflush(stdout);
+      *index += input_len;
+    } else {
+      fputs(TC_RED, stdout); fputs(s, stdout); fputs(TC_RESET, stdout);
+      fflush(stdout);
+      *index += utf8_char_memlen(current_word[*index]);
+    }
 }
 
 
@@ -147,7 +153,7 @@ int get_word_count(int rows, int cols) {
 
 void print_words(char *words[], int word_count) {
   for (int i = 0; i < word_count; i++) {
-    printf("%s ", words[i]);
+    fputs(words[i], stdout); fputs(" ", stdout);
   }
   fflush(stdout);
 }

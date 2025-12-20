@@ -4,11 +4,11 @@
 
 
 #define TC_RESET       "\x1B[0m"
-#define TC_BLACK 	   "\x1B[30m"
+#define TC_BLACK 	     "\x1B[30m"
 #define TC_BLACK_BG    "\x1B[40m"
 #define TC_RED 	       "\x1B[31m"
 #define TC_RED_BG 	   "\x1B[41m"
-#define TC_GREEN 	   "\x1B[32m"
+#define TC_GREEN 	     "\x1B[32m"
 #define TC_GREEN_BG    "\x1B[42m"
 #define TC_YELLOW 	   "\x1B[33m"
 #define TC_YELLOW_BG   "\x1B[43m"
@@ -24,16 +24,16 @@
 #define TC_DEFAULT_BG  "\x1B[49m"
 
 
-#define clear_screen() printf("\x1B[2J")
-#define tc_enable_alt_buff() printf("\x1B[?1049h")
-#define tc_disable_alt_buff()  printf("\x1B[?1049l")
+#define clear_screen() fputs("\x1B[2J", stdout)
+#define tc_enable_alt_buff() fputs("\x1B[?1049h", stdout)
+#define tc_disable_alt_buff()  fputs("\x1B[?1049l", stdout)
 #define tc_move_cursor(x,y) printf("\x1B[%d;%df", y, x)
 #define min(x,y)  (((x) < (y)) ? (x) : (y))
 
 
 int utf8_char_memlen(char c);
 char *newWord(const char **alphabet, unsigned int alphabet_len);
-int check_input(char *current_word, char *s, int index);
+void check_input(char *current_word, char *s, int *index);
 int new_tty(int fd);
 void tc_get_size(int* rows, int *cols);
 int restore_tty(int fd);
