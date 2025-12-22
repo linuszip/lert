@@ -1,9 +1,21 @@
 #include "core.h"
 #include "globals.h"
+#include <termios.h>
 #include <unistd.h>
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+
+
+int tc_term_restore(char *user_input, char **words, int word_count) {
+  free_words(words, word_count);
+  free(user_input);
+  restore_tty(STDIN_FILENO);
+  tc_disable_alt_buff();
+  return 0;
+}
+
 
 int main(int args, char **argv) 
 {
@@ -19,7 +31,7 @@ int main(int args, char **argv)
         puts(USAGE_MESSAGE);
         return 0;
       case 'a':
-      alphabet = whole_alphabet;
+        alphabet = whole_alphabet;
         alpha_size = wholealpha_size;
         break;
       case 'c':
@@ -65,11 +77,11 @@ int main(int args, char **argv)
 
 
   int rows, cols;
-  tc_get_size(&rows, &cols);
   int word_count;
+  tc_get_size(&rows, &cols);
   if ((word_count = get_word_count(rows, cols)) <= 0) {
     fputs("Terminal size is to small or font is to big. Needs to be at least 3x4\n", stderr);
-    return -1;
+    return EXIT_FAILURE;
   }
   int cursor_row = rows / 2 - 1;
   int cursor_col = cols / 2 - (5 * word_count - 3) / 2; 
@@ -89,30 +101,18 @@ int main(int args, char **argv)
   tc_move_cursor(cursor_col, cursor_row + 2);
   fflush(stdout);
 
-  char *user_input;
-  int index = 0; // Which char to check right now 
+  char *user_input = malloc(sizeof(char) * 5);
+  *(user_input + 4) = '\0';
+  int index = 0; // Which char in the word to check right now 
   int pos = 0;
   int words_index = 0;
   while (1) {
-    user_input = malloc(sizeof(char) * 5);
+    memset(user_input, 0, 4);
     if (read(STDIN_FILENO, user_input, 1) < 1) {
       /* If read failed */
-      free_words(words, word_count);
-      free(user_input);
       fputs("Error during read", stderr);
-      restore_tty(STDIN_FILENO);
-      tc_disable_alt_buff();
+      tc_term_restore(user_input, words, word_count);
       return EXIT_FAILURE;
-    }
-
-
-    if (*user_input == 27) {
-      /* User pressed escape */
-      free_words(words, word_count);
-      free(user_input);
-      restore_tty(STDIN_FILENO);
-      tc_disable_alt_buff();
-      return EXIT_SUCCESS;
     }
 
 
@@ -122,11 +122,11 @@ int main(int args, char **argv)
       for (int j = 0; j < word_count; j++) {
         words[j] = newWord(alphabet, alpha_size);        
       }
+
       tc_move_cursor(cursor_col, cursor_row);
       print_words(words, word_count);
-      index = 0;
-      pos = 0;
-      words_index = 0;
+
+      index = pos = words_index = 0;
       tc_move_cursor(cursor_col, cursor_row + 2);
       fflush(stdout);
       continue;
@@ -134,8 +134,7 @@ int main(int args, char **argv)
 
     
     if (((pos + 1) % 5) == 0) {
-      pos++;
-      words_index++;
+      pos++; words_index++;
       index = 0;
       fputs(user_input, stdout);
       tc_move_cursor(cursor_col + pos, cursor_row + 2);
@@ -152,16 +151,19 @@ int main(int args, char **argv)
       continue;
     }
 
-    if (!valid_input(*user_input)) {
-      
+
+    switch(validate_input(*user_input)) {
+    case 0:
+        tcflush(STDIN_FILENO, TCIFLUSH);
+        continue;
+    case 1:
+      break;
+    case 2:
+      tc_term_restore(user_input, words, word_count);
+      return EXIT_SUCCESS;
     }
 
-
     check_input(words[words_index], user_input, &index);
-    // tc_move_cursor(cursor_col, cursor_row + 4);
-    // printf("words_index: %d, index: %d, pos: %d", words_index, index, pos);
-    // tc_move_cursor(cursor_col + pos, cursor_row + 2);
-
     pos++;
     tc_move_cursor(cursor_col + pos, cursor_row + 2);
     fflush(stdout);

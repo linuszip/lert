@@ -14,16 +14,16 @@ const char *whole_alphabet[] = {
   "ä","ö","ü"
 };
 
+const char *level_two[] = {
+  "q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "ü", 
+  "a", "s", "d", "f", "g", "h", "j", "k", "l", "ö", "ä"
+};
+
 const char *upper_row[] = {
   "q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "ü"
 };
 
 const char *middle_row[] = {
-  "a", "s", "d", "f", "g", "h", "j", "k", "l", "ö", "ä"
-};
-
-const char *level_two[] = {
-  "q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "ü", 
   "a", "s", "d", "f", "g", "h", "j", "k", "l", "ö", "ä"
 };
 

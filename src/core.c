@@ -1,6 +1,5 @@
 #include "core.h"
 #include "globals.h"
-#include <limits.h>
 #include <string.h>
 #include <termios.h>
 #include <ctype.h>
@@ -14,25 +13,26 @@ struct termios BACKUP_TTY;
 
 
 int utf8_char_memlen(char c) {
-  /*
-  Returns the memory length of an utf-8 char, when given the first byte
-  Returns a positive integer, the length, else 0, if it is not a valid
-  utf-8 char.
-  */
-  unsigned char n = (unsigned char) c;
-  if (n < 0x80) return 1; // Ascii char
-  else if ((n >> 5) == 0x6) return 2; // c = 110xxxxx >> 5 = 00000110
-  else if ((n >> 4) == 0xE) return 3; // c = 1110xxxx >
-  else if ((n >> 3) == 0x1E) return 4; // c 11110xxx
-
+  if ((unsigned char) c < 0x80) return 1; // Ascii char
+  else if (((unsigned char) c >> 5) == 0x6) return 2; // c = 110xxxxx >> 5 = 00000110
+  else if (((unsigned char) c >> 4) == 0xE) return 3; // c = 1110xxxx >
+  else if (((unsigned char) c >> 3) == 0x1E) return 4; // c 11110xxx
   return 0;
 }
 
-int valid_input(char c) {
-  int len = utf8_char_memlen(c);
 
-  if (len == 1) {
-    return isalnum(c);
+int validate_input(char c) {
+  char next;
+  if ((unsigned char) c == 27) {
+    if (read(1, &next, 1) && next == '[') {
+      return 0;
+    }
+    return 2;
+  }
+
+  if (utf8_char_memlen(c) == 1) {
+    return isprint(c);
+    // return isalnum(c);
   }
   return 1;
 }
@@ -58,6 +58,22 @@ char *newWord(const char **alphabet, unsigned int alphabet_len) {
 }
 
 
+void free_words(char *words[], int word_count) {
+  /* Speicher freigeben */
+  for (int i = 0; i < word_count; i++) {
+    free(words[i]);
+  }
+}
+
+
+void print_words(char *words[], int word_count) {
+  for (int i = 0; i < word_count; i++) {
+    fputs(words[i], stdout); fputs(" ", stdout);
+  }
+  fflush(stdout);
+}
+
+
 void check_input(char *current_word, char *s, int *index) {
   int input_len = utf8_char_memlen(*s);
   char *p = s+1;
@@ -77,6 +93,7 @@ void check_input(char *current_word, char *s, int *index) {
       *index += utf8_char_memlen(current_word[*index]);
     }
 }
+
 
 
 int new_tty(int fd) {
@@ -123,39 +140,22 @@ int restore_tty(int fd) {
 }
 
 
-void free_words(char *words[], int word_count) {
-  /* Speicher freigeben */
-  for (int i = 0; i < word_count; i++) {
-    free(words[i]);
-  }
-}
-
-
 int get_word_count(int rows, int cols) {
   /*
-    Returns the number of words that fit on the screen respecting some space.
-    Returns an Integer larger or equals to zero, the words that fit the screen.
-    Returns 0 if now words fit.
+    Returns the number of words that fit on the screen. Returns an Integer
+    larger or equals to zero, the words that fit the screen. Returns 0 if
+    the terminal window is to small.
   */
 
   if ((cols < 4) | (rows < 3)) {
     return 0;
   }
-  int wc = 1;
 
   if (cols > 4) {
-    wc = min(8, cols / 5);
+    return  min(8, cols / 5);
   }
+  return 1;
 
-  return wc;
-}
-
-
-void print_words(char *words[], int word_count) {
-  for (int i = 0; i < word_count; i++) {
-    fputs(words[i], stdout); fputs(" ", stdout);
-  }
-  fflush(stdout);
 }
 
 
