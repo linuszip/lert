@@ -12,17 +12,29 @@ void config_init(config_t *cfg) {
 }
 
 static int parse_line(const char *line, char **key, char**value) {
-  char *begin = strchr(line, '=');
-  *key = strndup(line, begin - line);  
-  *value = strndup(line, strchr(line, '\n') - begin);
+  const char *begin;
+  const char *temp_line = line;
+  // *key = strndup(line, begin - line);  
+  // *value = strndup(line, strchr(line, '\n') - begin);
 
-  while((*begin) != '\n') {
-    if (isalpha(*begin)) {
+  while((*temp_line) != '\n') {
+    if (isalpha(*temp_line)) {
       break;
     }
-
-    begin++;
+    temp_line++;
   }
+  begin = temp_line;
+  char condition_char = 
+  while(*temp_line != '=' && *temp_line != '\n') {
+    if (*temp_line == )
+    temp_line++;
+  }
+
+  
+  
+  
+  
+  
 
   
   return 0;
