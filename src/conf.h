@@ -4,6 +4,10 @@
 
 #define CONF_H
 
+
+#define ERROR_MISSING_EQSIGN "Missing \"=\" at"
+#define ERROR_UNEXPECTED_SYMBOL "Unexpected symbal at"
+
 typedef struct config_entry {
   char *key;
   char *value;
@@ -15,6 +19,12 @@ typedef struct config {
   size_t count;
 } config_t;
 
+typedef struct config_error {
+  const char *line;
+  const int line_nbr;
+  const int position;
+  const char *error_msg;
+} config_error_t;
 
 void config_init(config_t *cfg);
 int config_load(config_t *cfg, const char *filename);
