@@ -6,7 +6,7 @@
 
 
 #define ERROR_MISSING_EQSIGN "Missing \"=\" at"
-#define ERROR_UNEXPECTED_SYMBOL "Unexpected symbal at"
+#define ERROR_UNEXPECTED_SYMBOL "Unexpected symbol at"
 
 typedef struct config_entry {
   char *key;
@@ -21,8 +21,8 @@ typedef struct config {
 
 typedef struct config_error {
   const char *line;
-  const int line_nbr;
-  const int position;
+  int line_nbr;
+  int position;
   const char *error_msg;
 } config_error_t;
 
