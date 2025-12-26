@@ -3,7 +3,7 @@ DFLAGS = -Wall -Wextra -g -fsanitize=address
 CFLAGS = -Wall -Wextra -O3
 BUILD_DIR = build
 VPATH = src
-OBJECTS = $(addprefix $(BUILD_DIR)/, main.o core.o globals.o)
+OBJECTS = $(addprefix $(BUILD_DIR)/, conf.o main.o core.o globals.o)
 
 
 all: $(OBJECTS)
