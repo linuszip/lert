@@ -19,7 +19,12 @@ static void print_error(config_error_t *error) {
 }
 
 
-static int parse_line(const char *line, int line_nbr, char **key, char**value, config_error_t *error) {
+static int isvldvchr(unsigned int c) {
+  return (isalnum(c)) || (c == 34) || (c == 123) || (c == 125) || (c == 44);
+}
+
+
+static int parse_line(const char *line, int line_nbr, char **key, char**value, config_error_t **error) {
   const char *begin;
   const char *p_line = line;
   int pos = 0;
@@ -30,7 +35,11 @@ static int parse_line(const char *line, int line_nbr, char **key, char**value, c
   }
 
   if (!isalpha((unsigned char) *p_line)) {
-    *error = (config_error_t){p_line, line_nbr, pos, ERROR_UNEXPECTED_SYMBOL};
+    *error = malloc(sizeof(config_error_t));
+    (**error).line = p_line;
+    (*error)->line_nbr = line_nbr;
+    (*error)->position = pos;    
+    (*error)->error_msg = ERROR_UNEXPECTED_SYMBOL;
     return 0;
   }
 
@@ -49,7 +58,11 @@ static int parse_line(const char *line, int line_nbr, char **key, char**value, c
   }
 
   if (*p_line != '=') {
-    *error = (config_error_t){p_line, line_nbr, pos, ERROR_UNEXPECTED_SYMBOL};
+    *error = malloc(sizeof(config_error_t));
+    (*error)->line = p_line;
+    (*error)->line_nbr = line_nbr;
+    (*error)->position = pos;    
+    (*error)->error_msg = ERROR_UNEXPECTED_SYMBOL;
     free(*key);
     return 0;
   }
@@ -61,24 +74,43 @@ static int parse_line(const char *line, int line_nbr, char **key, char**value, c
     pos++;
   }
 
-  if (!*p_line || !isalpha((unsigned char) *p_line)) {
-    *error = (config_error_t){p_line, line_nbr, pos, ERROR_UNEXPECTED_SYMBOL};
+  if (*p_line && *p_line == '{') {
+    begin = p_line;
+    while (*p_line && *p_line != '}');      
+    if (*p_line != '}') {
+      // ERROR, no closing bracket
+    }
+    goto end;
+  }
+
+  if (!*p_line || !isalnum((unsigned char) *p_line)) {
+    *error = malloc(sizeof(config_error_t));
+    (*error)->line = p_line;
+    (*error)->line_nbr = line_nbr;
+    (*error)->position = pos;    
+    (*error)->error_msg = ERROR_UNEXPECTED_SYMBOL;
     free(*key);
     return 0;
   }
 
   begin = p_line;
 
-  while (isalpha((unsigned char) *p_line)) {
+  while (*p_line && isalnum((unsigned char) *p_line)) {
     p_line++;
     pos++;
   }
 
+  end:
+
   *value = strndup(begin, p_line - begin);
 
-  while (p_line) {
+  while (*p_line) {
     if (!isspace((unsigned char) *p_line)) {
-      *error = (config_error_t){p_line, line_nbr, pos, ERROR_UNEXPECTED_SYMBOL};
+      *error = malloc(sizeof(config_error_t));
+      (*error)->line = p_line;
+      (*error)->line_nbr = line_nbr;
+      (*error)->position = pos;    
+      (*error)->error_msg = ERROR_UNEXPECTED_SYMBOL;
       free(*key);
       free(*value);
       return 0;
@@ -103,7 +135,6 @@ int config_load(config_t *cfg, const char *filename) {
   lineNumber = 0;
   line = NULL;
   error = NULL;
-  cfg = malloc(sizeof(config_t));
   cfg->count = 0;
   config_entry_t **next = &cfg->first; 
 
@@ -113,14 +144,14 @@ int config_load(config_t *cfg, const char *filename) {
   }
 
   while ( getline(&line, &t_p, config) > 0) {
-    if (!parse_line(line, lineNumber, &key, &value, error)) {
+    if (!parse_line(line, lineNumber, &key, &value, &error)) {
       print_error(error);
       return 0;
     }
     *next = malloc(sizeof(config_entry_t));
     (*next)->key = key;
     (*next)->value = value;
-    next = &(*next)->next;
+    next = &((*next)->next);
     lineNumber++;
     cfg->count++;
     free(line);
@@ -128,20 +159,16 @@ int config_load(config_t *cfg, const char *filename) {
   }
 
   fclose(config);
-  return 0;
+  return 1;
 }
 
 int main() {
-  const char* line = "  key k   =    value   ";
-  char *key;
-  char *value;
-  config_error_t error = {NULL, 0, 0, NULL};
-  config_entry_t entry;
-  if (parse_line(line, 1, &key, &value, &error)) {
-    entry = (config_entry_t){key, value, NULL};
-    printf("config_entry:\nentry.key: \"%s\", entry.value: \"%s\"\n", entry.key, entry.value);
+  char *cf = "/home/linus/src/lert/src/config";
+  config_t *cfg = malloc(sizeof(config_t));
+  if (config_load(cfg, cf)) {
+    printf("successfull: %d entrys read", (int)cfg->count);
   } else {
-    print_error(&error);
+    puts ("config read unsuccessfull");
   }
   return 0;
 }
