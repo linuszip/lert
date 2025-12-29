@@ -10,17 +10,25 @@ void config_init(config_t *cfg) {
 }
 
 static void print_error(config_error_t *error) {
-  fprintf(stderr,
-          "%s in %d:%d\n>%10s\n",
-          error->error_msg,
-          error->line_nbr,
-          error->position + 1,
-          error->line);
+  if (*(error->line)) {
+    fprintf(stderr,
+            "%s in %d:%d\n>%10s\n",
+            error->error_msg,
+            error->line_nbr,
+            error->position + 1,
+            error->line);
+  } else {
+    fprintf(stderr,
+            "%s in %d:%d\n>",
+            error->error_msg,
+            error->line_nbr,
+            error->position + 1);
+  }
 }
 
 
 static int isvldvchr(unsigned int c) {
-  return (isalnum(c)) || (c == 34) || (c == 123) || (c == 125) || (c == 44);
+  return (isalnum(c)) || (c == 32) || (c == 34) || (c == 123) || (c == 125) || (c == 44);
 }
 
 
@@ -76,9 +84,16 @@ static int parse_line(const char *line, int line_nbr, char **key, char**value, c
 
   if (*p_line && *p_line == '{') {
     begin = p_line;
-    while (*p_line && *p_line != '}');      
+    while (*p_line && *p_line != '}') {
+      p_line++;
+    }      
     if (*p_line != '}') {
-      // ERROR, no closing bracket
+      *error = malloc(sizeof(config_error_t));
+      (*error)->line = p_line;
+      (*error)->line_nbr = line_nbr;
+      (*error)->position = pos;
+      (*error)->error_msg = ERROR_MISSING_BRACKET;
+      free(key);
     }
     goto end;
   }
@@ -146,6 +161,9 @@ int config_load(config_t *cfg, const char *filename) {
   while ( getline(&line, &t_p, config) > 0) {
     if (!parse_line(line, lineNumber, &key, &value, &error)) {
       print_error(error);
+      free(line);
+      free(error);
+      fclose(config);
       return 0;
     }
     *next = malloc(sizeof(config_entry_t));
@@ -163,12 +181,13 @@ int config_load(config_t *cfg, const char *filename) {
 }
 
 int main() {
-  char *cf = "/home/linus/src/lert/src/config";
+  char *cf = "/Users/linus/src/lert/src/config";
   config_t *cfg = malloc(sizeof(config_t));
   if (config_load(cfg, cf)) {
     printf("successfull: %d entrys read", (int)cfg->count);
   } else {
     puts ("config read unsuccessfull");
   }
+
   return 0;
 }

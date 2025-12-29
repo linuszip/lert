@@ -7,6 +7,7 @@
 
 #define ERROR_MISSING_EQSIGN "Missing \"=\" at"
 #define ERROR_UNEXPECTED_SYMBOL "Unexpected symbol at"
+#define ERROR_MISSING_BRACKET "Missing closing } bracket"
 
 typedef struct config_entry {
   char *key;
