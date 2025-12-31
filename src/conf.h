@@ -27,7 +27,7 @@ typedef struct config_error {
   const char *error_msg;
 } config_error_t;
 
-void config_init(config_t *cfg);
+config_t *config_init();
 int config_load(config_t *cfg, const char *filename);
 const char *config_get(const char* cfg, const char *key);
 void config_free(config_t *cfg);

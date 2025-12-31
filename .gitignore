@@ -9,4 +9,5 @@
 !*.md
 !.gitignore
 !.gitattributes
+!config
 
