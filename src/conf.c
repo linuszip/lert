@@ -11,6 +11,19 @@ config_t *config_init() {
   return cfg;
 }
 
+char *config_get_path() {
+
+    char *prior_dir = getenv("HOME");
+    if (!prior_dir) {
+      fputs("Error finding config file", stderr);
+      return NULL;
+    }
+    char *latter_part = "/.config/lert/config";
+    char *config_dir = malloc(sizeof(char) * (strlen(prior_dir) + 20 + 1));
+    stpcpy(stpcpy(config_dir, prior_dir), latter_part);
+    return config_dir;
+}
+
 
 void config_free(config_t *cfg) {
   if (!cfg) return;
@@ -59,6 +72,8 @@ static int parse_line(const char *line, int line_nbr, char **key, char **value,
     pos++;
   }
 
+  if (!*p_line) return 2;
+
   if (!isalpha((unsigned char)*p_line)) {
     *error = malloc(sizeof(config_error_t));
     (**error).line = p_line;
@@ -70,14 +85,23 @@ static int parse_line(const char *line, int line_nbr, char **key, char **value,
 
   begin = p_line;
 
-  while (isalpha((unsigned char)*p_line)) {
+  while (*p_line && isalpha((unsigned char)*p_line)) {
     p_line++;
     pos++;
   }
 
+  if (!*p_line) {
+    *error = malloc(sizeof(config_error_t));
+    (*error)->line = p_line;
+    (*error)->line_nbr = line_nbr;
+    (*error)->position = pos;
+    (*error)->error_msg = ERROR_NO_KEYVAL_PAIR;
+    return 0;
+  }
+
   *key = strndup(begin, p_line - begin);
 
-  while (isspace((unsigned int)*p_line)) {
+  while (isspace((unsigned int) *p_line)) {
     p_line++;
     pos++;
   }
@@ -87,35 +111,58 @@ static int parse_line(const char *line, int line_nbr, char **key, char **value,
     (*error)->line = p_line;
     (*error)->line_nbr = line_nbr;
     (*error)->position = pos;
-    (*error)->error_msg = ERROR_UNEXPECTED_SYMBOL;
+    (*error)->error_msg =  (!*p_line) ? ERROR_NO_KEYVAL_PAIR : ERROR_UNEXPECTED_SYMBOL;
     return 0;
   }
 
   ++p_line;
 
-  while (*p_line && isspace((unsigned char)*p_line)) {
+  while (isspace((unsigned char)*p_line)) {
     p_line++;
     pos++;
   }
 
-  if (*p_line && *p_line == '{') {
+  if (!*p_line) {
+    
+  }
+
+  if (*p_line == '{') {
     begin = p_line;
     p_line++;
-    while (*p_line && isvldvchr((unsigned int)*p_line)) {
+    pos++;
+    while (*p_line && isvldvchr((unsigned int) *p_line)) {
       p_line++;
+      pos++;
     }
     if (*p_line != '}') {
       *error = malloc(sizeof(config_error_t));
       (*error)->line = p_line;
       (*error)->line_nbr = line_nbr;
       (*error)->position = pos;
-      (*error)->error_msg = ERROR_MISSING_BRACKET;
+      (*error)->error_msg = (isspace((unsigned char) *p_line)) ? ERROR_MISSING_BRACKET : ERROR_UNEXPECTED_SYMBOL;
     }
     p_line++;
+    pos++;
     goto end;
   }
 
-  if (!*p_line || !isalnum((unsigned char)*p_line)) {
+  if (!isalnum((unsigned char)*p_line)) {
+    *error = malloc(sizeof(config_error_t));
+    (*error)->line = p_line;
+    (*error)->line_nbr = line_nbr;
+    (*error)->position = pos;
+    (*error)->error_msg = (*p_line) ? ERROR_NO_KEYVAL_PAIR : ERROR_UNEXPECTED_SYMBOL;
+    return 0;
+  }
+
+  begin = p_line;
+
+  while (isalnum((unsigned char) *p_line)) {
+    p_line++;
+    pos++;
+  }
+
+  if(!isspace((unsigned int) *p_line)) {
     *error = malloc(sizeof(config_error_t));
     (*error)->line = p_line;
     (*error)->line_nbr = line_nbr;
@@ -124,14 +171,7 @@ static int parse_line(const char *line, int line_nbr, char **key, char **value,
     return 0;
   }
 
-  begin = p_line;
-
-  while (*p_line && isalnum((unsigned char)*p_line)) {
-    p_line++;
-    pos++;
-  }
-
-end:
+  end:
 
   *value = strndup(begin, p_line - begin);
 
@@ -150,21 +190,21 @@ end:
   return 1;
 }
 
-// TODO Test this function
+
 int config_load(config_t *cfg, const char *filename) {
   FILE *config;
   size_t t_p;
-  char *line;
   int lineNumber;
   config_error_t *error;
-  char *key, *value;
+  char *line, *key, *value;
+  config_entry_t **next;
 
   t_p = 0;
   lineNumber = 1;
   line = NULL;
   error = NULL;
   cfg->count = 0;
-  config_entry_t **next = &cfg->first;
+  next = &cfg->first;
 
   if ((config = fopen(filename, "r")) == NULL) {
     fprintf(stderr, "Error opening config file at %s\n", filename);
@@ -172,26 +212,77 @@ int config_load(config_t *cfg, const char *filename) {
   }
 
   while (getline(&line, &t_p, config) > 0) {
-    if (!parse_line(line, lineNumber, &key, &value, &error)) {
-      print_error(error);
-      free(line);
-      free(error);
-      fclose(config);
-      config_free(cfg);
-      return 0;
+
+    switch (parse_line(line, lineNumber, &key, &value, &error)) {
+      case 0: 
+        print_error(error);
+        free(line);
+        free(error);
+        fclose(config);
+        config_free(cfg);
+        return 0;
+      case 1:
+        *next = malloc(sizeof(config_entry_t));
+        (*next)->key = key;
+        (*next)->value = value;
+        (*next)->next = NULL;
+        next = &((*next)->next);
+        lineNumber++;
+        cfg->count++;
+        free(line);
+        line = NULL;
+        break;
+      case 2:
+        lineNumber++;
+        free(line);
+        line = NULL;
+        continue;
     }
-    *next = malloc(sizeof(config_entry_t));
-    (*next)->key = key;
-    (*next)->value = value;
-    (*next)->next = NULL;
-    next = &((*next)->next);
-    lineNumber++;
-    cfg->count++;
-    free(line);
-    line = NULL;
+    // if (!parse_line(line, lineNumber, &key, &value, &error)) {
+    //   print_error(error);
+    //   free(line);
+    //   free(error);
+    //   fclose(config);
+    //   config_free(cfg);
+    //   return 0;
+    // }
+    // *next = malloc(sizeof(config_entry_t));
+    // (*next)->key = key;
+    // (*next)->value = value;
+    // (*next)->next = NULL;
+    // next = &((*next)->next);
+    // lineNumber++;
+    // cfg->count++;
+    // free(line);
+    // line = NULL;
   }
 
   free(line);
   fclose(config);
   return 1;
 }
+
+// int main() {
+
+//   const char *cf = "/home/linus/projs/lert/config";
+//   config_t *cfg = malloc(sizeof(config_t));
+
+//   if (config_load(cfg, cf)) {
+//     config_entry_t *cur;
+//     int i = 0;
+
+//     cur = cfg->first;
+//     while (cur) {
+//       printf("Config entry %d\nKey: %s\nValue: %s\n\n", i, cur->key, cur->value);
+//       i++;
+//       cur = cur->next;
+//     }
+
+//     config_free(cfg);
+//     return 0;
+//   } else {
+//     return 1;
+//   }
+
+  
+// }

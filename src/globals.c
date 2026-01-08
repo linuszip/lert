@@ -2,11 +2,12 @@
 
 const char *USAGE_MESSAGE =
                       "USAGE:\n"
-                      "    lert [FLAGS]\n\nFLAGS:\n    "
-                      "-h            Print help information\n"
+                      "    lert [FLAGS]\n\nFLAGS:\n"
+                      "    -h            Print help information\n"
                       "    -a            Start in normal mode\n"
-                      "    -c            Start in challenge mode\n"
-                      "    -l=[1,2,3]    Start in the corresponding level";
+                      "    -t            Start in tracking mode\n"
+                      "    -c file_path  Start with config from file_path\n"
+                      "    -l [1,2,3]    Start in the corresponding level";
 
 const char *whole_alphabet[] = {
   "a","b","c","d","e","f","g","h","i","j","k","l","m",

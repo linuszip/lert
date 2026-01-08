@@ -11,6 +11,7 @@ all: $(OBJECTS)
 
 $(OBJECTS): globals.h | $(BUILD_DIR)
 build/main.o build/core.o: core.h
+build/main.o:conf.h
 
 $(BUILD_DIR)/%.o: %.c 
 	$(CC) $(CFLAGS) -c $< -o $@

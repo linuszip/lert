@@ -5,9 +5,10 @@
 #define CONF_H
 
 
-#define ERROR_MISSING_EQSIGN "Missing \"=\" at"
+#define ERROR_NO_KEYVAL_PAIR "Missing \"key = value\" pair at"
 #define ERROR_UNEXPECTED_SYMBOL "Unexpected symbol at"
 #define ERROR_MISSING_BRACKET "Missing closing } bracket"
+
 
 typedef struct config_entry {
   char *key;
@@ -27,6 +28,8 @@ typedef struct config_error {
   const char *error_msg;
 } config_error_t;
 
+
+char *config_get_path();
 config_t *config_init();
 int config_load(config_t *cfg, const char *filename);
 const char *config_get(const char* cfg, const char *key);
