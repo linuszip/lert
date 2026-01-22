@@ -12,7 +12,8 @@ struct termios BACKUP_TTY;
 
 
 
-int utf8_char_memlen(char c) {
+int utf8_char_memlen(char c)
+{
   if ((unsigned char) c < 0x80) return 1; // Ascii char
   else if (((unsigned char) c >> 5) == 0x6) return 2; // c = 110xxxxx >> 5 = 00000110
   else if (((unsigned char) c >> 4) == 0xE) return 3; // c = 1110xxxx >
@@ -21,7 +22,8 @@ int utf8_char_memlen(char c) {
 }
 
 
-int validate_input(char c) {
+int validate_input(char c)
+{
   char next;
   if ((unsigned char) c == 27) {
     if (read(1, &next, 1) && next == '[') {
@@ -39,7 +41,8 @@ int validate_input(char c) {
 
 
 
-char *newWord(const char **alphabet, unsigned int alphabet_len) {
+char *newWord(const char **alphabet, unsigned int alphabet_len)
+{
   size_t len = word_len * 4 + 1;
   char *word = malloc(sizeof(char) * len);
 
@@ -58,7 +61,8 @@ char *newWord(const char **alphabet, unsigned int alphabet_len) {
 }
 
 
-void free_words(char *words[], int word_count) {
+void free_words(char *words[], int word_count)
+{
   /* Speicher freigeben */
   for (int i = 0; i < word_count; i++) {
     free(words[i]);
@@ -66,7 +70,8 @@ void free_words(char *words[], int word_count) {
 }
 
 
-void print_words(char *words[], int word_count) {
+void print_words(char *words[], int word_count)
+{
   for (int i = 0; i < word_count; i++) {
     fputs(words[i], stdout); fputs(" ", stdout);
   }
@@ -74,7 +79,8 @@ void print_words(char *words[], int word_count) {
 }
 
 
-void check_input(char *current_word, char *s, int *index) {
+void check_input(char *current_word, char *s, int *index)
+{
   int input_len = utf8_char_memlen(*s);
   char *p = s+1;
   
@@ -96,7 +102,8 @@ void check_input(char *current_word, char *s, int *index) {
 
 
 
-int new_tty(int fd) {
+int new_tty(int fd)
+{
 
   struct termios buff;
   /* Wir fragen nach den Attributen des Terminals und */
@@ -124,7 +131,8 @@ int new_tty(int fd) {
 }
 
 
-void tc_get_size(int* rows, int *cols) {
+void tc_get_size(int* rows, int *cols)
+{
   struct winsize size;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
   *rows = size.ws_row;
@@ -132,7 +140,8 @@ void tc_get_size(int* rows, int *cols) {
 }
 
 
-int restore_tty(int fd) {
+int restore_tty(int fd)
+{
   if (tcsetattr(fd, TCSAFLUSH, &BACKUP_TTY) == -1) {
     return -1;
   }
@@ -140,7 +149,8 @@ int restore_tty(int fd) {
 }
 
 
-int get_word_count(int rows, int cols) {
+int get_word_count(int rows, int cols)
+{
   /*
     Returns the number of words that fit on the screen. Returns an Integer
     larger or equals to zero, the words that fit the screen. Returns 0 if

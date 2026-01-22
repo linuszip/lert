@@ -9,19 +9,30 @@
 #define ERROR_UNEXPECTED_SYMBOL "Unexpected symbol at"
 #define ERROR_MISSING_BRACKET "Missing closing } bracket"
 
+#define  INT 1
+#define  KEYBOARD_CHARS 2
+#define  STRING 3
+#define  BOOL 4
 
-typedef struct config_entry {
+
+typedef struct config_entry
+{
   char *key;
   char *value;
+  unsigned char type;
   struct config_entry *next;
 } config_entry_t;
 
-typedef struct config {
+
+typedef struct config
+{
   config_entry_t *first;
   size_t count;
 } config_t;
 
-typedef struct config_error {
+
+typedef struct config_error
+{
   const char *line;
   int line_nbr;
   int position;

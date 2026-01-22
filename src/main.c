@@ -9,7 +9,8 @@
 #include <time.h>
 
 
-int tc_term_restore(char *user_input, char **words, int word_count) {
+int tc_term_restore(char *user_input, char **words, int word_count)
+{
   free_words(words, word_count);
   free(user_input);
   restore_tty(STDIN_FILENO);
@@ -32,8 +33,10 @@ int main(int args, char **argv)
   cfg_path = NULL;
 
 
-  while ((opt = getopt(args, argv, "hac:tl:")) != -1) {
-    switch (opt) {
+  while ((opt = getopt(args, argv, "hac:tl:")) != -1)
+  {
+    switch (opt)
+    {
       case 'h':
         fputs(USAGE_MESSAGE, stderr);
         return 0;
@@ -51,17 +54,20 @@ int main(int args, char **argv)
       case 'l':
         level = strtol(optarg, &end, 10);
 
-        if (*end != '\0') {
+        if (*end != '\0')
+        {
           fputs("Error: -l expects a number", stderr);
           return EXIT_FAILURE;
         }
 
-        if (level < 1 || level > 3) {
+        if (level < 1 || level > 3)
+        {
           fputs("Error: -l expects an integer between 1 and 3", stderr);
           return EXIT_FAILURE;
         }
 
-        switch (level) {
+        switch (level)
+        {
           case 1:
             alphabet = middle_row;
             alpha_size = middle_row_len;
@@ -77,7 +83,8 @@ int main(int args, char **argv)
         }
         break;
       case 'c':
-        if ( !(cfg_path = optarg)) {
+        if ( !(cfg_path = optarg))
+        {
           fputs("Missing argument to -c", stderr);
           return 1;
         }
@@ -89,14 +96,16 @@ int main(int args, char **argv)
   }
 
 
-  // if (!cfg_path) {
-  //   cfg_path = config_get_path();    
-  // } 
-  // if(!cfg_path) {
-  //   return EXIT_FAILURE;
-  // }
-  // config_t *cfg = config_init();
-  // config_load(cfg, cfg_path);
+  if (!cfg_path)
+  {
+    cfg_path = config_get_path();    
+  } 
+  if(!cfg_path)
+  {
+    return EXIT_FAILURE;
+  }
+  config_t *cfg = config_init();
+  config_load(cfg, cfg_path);
   
 
 
@@ -104,7 +113,8 @@ int main(int args, char **argv)
   int rows, cols;
   int word_count;
   tc_get_size(&rows, &cols);
-  if ((word_count = get_word_count(rows, cols)) <= 0) {
+  if ((word_count = get_word_count(rows, cols)) <= 0)
+  {
     fputs("Terminal size is to small or font is to big. Needs to be at least 3x4\n", stderr);
     return EXIT_FAILURE;
   }
@@ -114,7 +124,8 @@ int main(int args, char **argv)
   // Generate words
   char *words[word_count];
   srand(time(NULL));
-  for (int j = 0; j < word_count; j++) {
+  for (int j = 0; j < word_count; j++)
+  {
     words[j] = newWord(alphabet, alpha_size);
   }
   
@@ -131,9 +142,11 @@ int main(int args, char **argv)
   int index = 0; // Which char in the word to check right now 
   int pos = 0;
   int words_index = 0;
-  while (1) {
+  while (1)
+  {
     memset(user_input, 0, 4);
-    if (read(STDIN_FILENO, user_input, 1) < 1) {
+    if (read(STDIN_FILENO, user_input, 1) < 1)
+    {
       /* If read failed */
       fputs("Error during read", stderr);
       tc_term_restore(user_input, words, word_count);
@@ -141,10 +154,12 @@ int main(int args, char **argv)
     }
 
 
-    if (pos == (word_count * word_len + word_count - 1)) {
+    if (pos == (word_count * word_len + word_count - 1))
+    {
       free_words(words, word_count);
       clear_screen();
-      for (int j = 0; j < word_count; j++) {
+      for (int j = 0; j < word_count; j++)
+      {
         words[j] = newWord(alphabet, alpha_size);        
       }
 
@@ -158,7 +173,8 @@ int main(int args, char **argv)
     }
 
     
-    if (((pos + 1) % 5) == 0) {
+    if (((pos + 1) % 5) == 0)
+    {
       pos++; words_index++;
       index = 0;
       fputs(user_input, stdout);
@@ -168,7 +184,8 @@ int main(int args, char **argv)
     }
 
 
-    if (*user_input == 32) {
+    if (*user_input == 32)
+    {
       index++;
       pos++;
       tc_move_cursor(cursor_col + pos, cursor_row + 2);
@@ -177,7 +194,8 @@ int main(int args, char **argv)
     }
 
 
-    switch(validate_input(*user_input)) {
+    switch(validate_input(*user_input))
+    {
     case 0:
         tcflush(STDIN_FILENO, TCIFLUSH);
         continue;

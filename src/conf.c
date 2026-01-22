@@ -4,18 +4,20 @@
 #include <string.h>
 
 
-config_t *config_init() {
+config_t *config_init()
+{
   config_t *cfg = malloc(sizeof(config_t));
   cfg->first = NULL;
   cfg->count = 0;
   return cfg;
 }
 
-char *config_get_path() {
 
+char *config_get_path()
+{
     char *prior_dir = getenv("HOME");
     if (!prior_dir) {
-      fputs("Error finding config file", stderr);
+      fputs("Error finding the path of the config file", stderr);
       return NULL;
     }
     char *latter_part = "/.config/lert/config";
@@ -25,7 +27,8 @@ char *config_get_path() {
 }
 
 
-void config_free(config_t *cfg) {
+void config_free(config_t *cfg)
+{
   if (!cfg) return;
 
   config_entry_t *next;
@@ -46,7 +49,8 @@ void config_free(config_t *cfg) {
 }
 
 
-static void print_error(config_error_t *error) {
+static void print_error(config_error_t *error)
+{
   if (*(error->line)) {
     fprintf(stderr, "%s in %d:%d\n>%5s\n", error->error_msg, error->line_nbr,
             error->position + 1, error->line);
@@ -56,13 +60,15 @@ static void print_error(config_error_t *error) {
   }
 }
 
-static int isvldvchr(unsigned int c) {
+static int isvldvchr(unsigned int c)
+{
   return (isalnum(c)) || (isspace(c)) || (c == 32) || (c == 34) || (c == 44);
 }
 
 
 static int parse_line(const char *line, int line_nbr, char **key, char **value,
-                      config_error_t **error) {
+                      config_error_t **error)
+{
   const char *begin;
   const char *p_line = line;
   int pos = 0;
@@ -191,7 +197,8 @@ static int parse_line(const char *line, int line_nbr, char **key, char **value,
 }
 
 
-int config_load(config_t *cfg, const char *filename) {
+int config_load(config_t *cfg, const char *filename)
+{
   FILE *config;
   size_t t_p;
   int lineNumber;
