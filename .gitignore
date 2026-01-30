@@ -1,5 +1,5 @@
-*
 
+*
 !*.sh
 !*.h
 !*.c
@@ -9,5 +9,4 @@
 !*.md
 !.gitignore
 !.gitattributes
-!config
 

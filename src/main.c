@@ -106,6 +106,15 @@ int main(int args, char **argv)
   }
   config_t *cfg = config_init();
   config_load(cfg, cfg_path);
+  config_entry_t *entry = cfg->first;
+
+  while (entry) {
+    
+    
+    entry = entry->next;
+  }
+
+  
   
 
 

@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 
 config_t *config_init()
@@ -66,11 +67,25 @@ static int isvldvchr(unsigned int c)
 }
 
 
-static int parse_line(const char *line, int line_nbr, char **key, char **value,
-                      config_error_t **error)
+static config_error_t *error_init(const char *line, int line_nbr, int position, const char *error_msg)
+{
+  config_error_t *error = malloc(sizeof(config_error_t));
+  error->line      = line;
+  error->line_nbr  = line_nbr;
+  error->position  = position;
+  error->error_msg = error_msg;
+  return error;
+}
+
+
+#define ERROR(error_msg) error_init(p_line, line_nbr, pos, error_msg)
+
+
+static int parse_line(const char *line, int line_nbr, char **key, void **value,
+                      config_error_t **error, unsigned char *type)
 {
   const char *begin;
-  const char *p_line = line;
+  char *p_line = line;
   int pos = 0;
 
   while (isspace((unsigned char)*p_line)) {
@@ -81,11 +96,7 @@ static int parse_line(const char *line, int line_nbr, char **key, char **value,
   if (!*p_line) return 2;
 
   if (!isalpha((unsigned char)*p_line)) {
-    *error = malloc(sizeof(config_error_t));
-    (**error).line = p_line;
-    (*error)->line_nbr = line_nbr;
-    (*error)->position = pos;
-    (*error)->error_msg = ERROR_UNEXPECTED_SYMBOL;
+    *error = ERROR(ERROR_UNEXPECTED_SYMBOL);
     return 0;
   }
 
@@ -97,11 +108,7 @@ static int parse_line(const char *line, int line_nbr, char **key, char **value,
   }
 
   if (!*p_line) {
-    *error = malloc(sizeof(config_error_t));
-    (*error)->line = p_line;
-    (*error)->line_nbr = line_nbr;
-    (*error)->position = pos;
-    (*error)->error_msg = ERROR_NO_KEYVAL_PAIR;
+    *error = ERROR(ERROR_NO_KEYVAL_PAIR);
     return 0;
   }
 
@@ -113,39 +120,29 @@ static int parse_line(const char *line, int line_nbr, char **key, char **value,
   }
 
   if (*p_line != '=') {
-    *error = malloc(sizeof(config_error_t));
-    (*error)->line = p_line;
-    (*error)->line_nbr = line_nbr;
-    (*error)->position = pos;
-    (*error)->error_msg =  (!*p_line) ? ERROR_NO_KEYVAL_PAIR : ERROR_UNEXPECTED_SYMBOL;
+    *error = ERROR((!*p_line) ? ERROR_NO_KEYVAL_PAIR : ERROR_UNEXPECTED_SYMBOL);
     return 0;
   }
 
   ++p_line;
 
-  while (isspace((unsigned char)*p_line)) {
+  while (isspace((int) *p_line)) {
     p_line++;
     pos++;
   }
 
-  if (!*p_line) {
-    
-  }
 
   if (*p_line == '{') {
+    *type = KEYBOARD_CHARS;
     begin = p_line;
     p_line++;
     pos++;
-    while (*p_line && isvldvchr((unsigned int) *p_line)) {
+    while (*p_line && isvldvchr((int) *p_line)) {
       p_line++;
       pos++;
     }
     if (*p_line != '}') {
-      *error = malloc(sizeof(config_error_t));
-      (*error)->line = p_line;
-      (*error)->line_nbr = line_nbr;
-      (*error)->position = pos;
-      (*error)->error_msg = (isspace((unsigned char) *p_line)) ? ERROR_MISSING_BRACKET : ERROR_UNEXPECTED_SYMBOL;
+      *error = ERROR(( isspace( (int) *p_line)) ? ERROR_MISSING_BRACKET : ERROR_UNEXPECTED_SYMBOL);
     }
     p_line++;
     pos++;
@@ -153,28 +150,41 @@ static int parse_line(const char *line, int line_nbr, char **key, char **value,
   }
 
   if (!isalnum((unsigned char)*p_line)) {
-    *error = malloc(sizeof(config_error_t));
-    (*error)->line = p_line;
-    (*error)->line_nbr = line_nbr;
-    (*error)->position = pos;
-    (*error)->error_msg = (*p_line) ? ERROR_NO_KEYVAL_PAIR : ERROR_UNEXPECTED_SYMBOL;
+    *error = ERROR((*p_line) ? ERROR_NO_KEYVAL_PAIR : ERROR_UNEXPECTED_SYMBOL);
     return 0;
+  }
+
+  int (*check)(int);
+
+  if (isalpha((int) *p_line)) {
+    check = &isalpha;
+    *type = STRING;
+  } 
+
+  if (isdigit((int) *p_line)) {
+    check = &isdigit;
+    *type = INT;
   }
 
   begin = p_line;
 
-  while (isalnum((unsigned char) *p_line)) {
+  while (check((int) *p_line)) {
     p_line++;
     pos++;
   }
 
-  if(!isspace((unsigned int) *p_line)) {
-    *error = malloc(sizeof(config_error_t));
-    (*error)->line = p_line;
-    (*error)->line_nbr = line_nbr;
-    (*error)->position = pos;
-    (*error)->error_msg = ERROR_UNEXPECTED_SYMBOL;
+  if(*p_line && !isspace((int) *p_line)) {
+    *error = ERROR(ERROR_UNEXPECTED_SYMBOL);
     return 0;
+  }
+
+  if (*type == INT) {
+    long l = strtol(begin, &p_line, 10);
+    if (l > INT_MAX || l < INT_MIN) {
+      
+    }
+    int val = (int) l;
+    *value  = &val;
   }
 
   end:
@@ -182,12 +192,8 @@ static int parse_line(const char *line, int line_nbr, char **key, char **value,
   *value = strndup(begin, p_line - begin);
 
   while (*p_line) {
-    if (!isspace((unsigned char)*p_line)) {
-      *error = malloc(sizeof(config_error_t));
-      (*error)->line = p_line;
-      (*error)->line_nbr = line_nbr;
-      (*error)->position = pos;
-      (*error)->error_msg = ERROR_UNEXPECTED_SYMBOL;
+    if (!isspace((int)*p_line)) {
+      *error = ERROR(ERROR_UNEXPECTED_SYMBOL);
       return 0;
     }
     p_line++;
@@ -203,8 +209,10 @@ int config_load(config_t *cfg, const char *filename)
   size_t t_p;
   int lineNumber;
   config_error_t *error;
-  char *line, *key, *value;
+  char *line, *key;
+  void *value;
   config_entry_t **next;
+  unsigned char type;
 
   t_p = 0;
   lineNumber = 1;
@@ -220,7 +228,7 @@ int config_load(config_t *cfg, const char *filename)
 
   while (getline(&line, &t_p, config) > 0) {
 
-    switch (parse_line(line, lineNumber, &key, &value, &error)) {
+    switch (parse_line(line, lineNumber, &key, &value, &error, &type)) {
       case 0: 
         print_error(error);
         free(line);
@@ -233,6 +241,7 @@ int config_load(config_t *cfg, const char *filename)
         (*next)->key = key;
         (*next)->value = value;
         (*next)->next = NULL;
+        (*next)->type = type;
         next = &((*next)->next);
         lineNumber++;
         cfg->count++;

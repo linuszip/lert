@@ -11,14 +11,14 @@
 
 #define  INT 1
 #define  KEYBOARD_CHARS 2
-#define  STRING 3
-#define  BOOL 4
+#define  BOOL 3
+#define  STRING 4
 
 
 typedef struct config_entry
 {
   char *key;
-  char *value;
+  void *value;
   unsigned char type;
   struct config_entry *next;
 } config_entry_t;
