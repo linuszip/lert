@@ -1,6 +1,3 @@
-#include "core.h"
-#include "globals.h"
-#include "conf.h"
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
@@ -8,14 +5,17 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "core.h"
+#include "globals.h"
+#include "conf.h"
 
-int tc_term_restore(char *user_input, char **words, int word_count)
+
+int tc_term_restore(char *words)
 {
-  free_words(words, word_count);
-  free(user_input);
+  free(words);
   restore_tty(STDIN_FILENO);
   tc_disable_alt_buff();
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 
@@ -96,6 +96,7 @@ int main(int args, char **argv)
   }
 
 
+  /*
   if (!cfg_path)
   {
     cfg_path = config_get_path();    
@@ -113,11 +114,7 @@ int main(int args, char **argv)
     
     entry = entry->next;
   }
-
-  
-  
-
-
+  */
 
   int rows, cols;
   int word_count;
@@ -131,12 +128,12 @@ int main(int args, char **argv)
   int cursor_col = cols / 2 - (5 * word_count - 3) / 2; 
 
   // Generate words
-  char *words[word_count];
-  srand(time(NULL));
-  for (int j = 0; j < word_count; j++)
-  {
-    words[j] = newWord(alphabet, alpha_size);
+  char *words = malloc(sizeof(char) * word_count * (WORD_MEM_SIZE +1));
+  if (!words) {
+    fputs("Error during malloc", stderr);
+    return EXIT_FAILURE;
   }
+  generateWords(words, word_count, alphabet, alpha_size);
   
   tc_enable_alt_buff();
   new_tty(STDIN_FILENO);
@@ -146,31 +143,42 @@ int main(int args, char **argv)
   tc_move_cursor(cursor_col, cursor_row + 2);
   fflush(stdout);
 
-  char *user_input = malloc(sizeof(char) * 5);
-  *(user_input + 4) = '\0';
-  int index = 0; // Which char in the word to check right now 
-  int pos = 0;
+  char user_input[5];
+  user_input[4] = '\0';
   int words_index = 0;
+  int index       = 0; // Which char in the word to check right now 
+  int pos         = 0;
+
   while (1)
   {
-    memset(user_input, 0, 4);
-    if (read(STDIN_FILENO, user_input, 1) < 1)
+    memset(user_input, 0, 5);
+
+    if (read(1, user_input, 1) != 1)
     {
-      /* If read failed */
       fputs("Error during read", stderr);
-      tc_term_restore(user_input, words, word_count);
-      return EXIT_FAILURE;
+      tc_term_restore(words);
+      return EXIT_SUCCESS;
     }
 
 
-    if (pos == (word_count * word_len + word_count - 1))
+    if (*user_input == 27)
     {
-      free_words(words, word_count);
-      clear_screen();
-      for (int j = 0; j < word_count; j++)
-      {
-        words[j] = newWord(alphabet, alpha_size);        
+      if (read_with_timeout(100) != 1) {
+        tc_term_restore(words);
+        return EXIT_SUCCESS;
       }
+    }
+
+    
+    for (int i = 1; i < utf8_char_memlen(user_input[0]); i++)
+    {
+      user_input[i] = (char) fgetc(stdin);
+    }
+
+    if (pos == (word_count * WORD_LENGTH + word_count - 1))
+    {
+      clear_screen();
+      generateWords(words, word_count, alphabet, alpha_size);
 
       tc_move_cursor(cursor_col, cursor_row);
       print_words(words, word_count);
@@ -181,7 +189,7 @@ int main(int args, char **argv)
       continue;
     }
 
-    
+    // If pos is between two words
     if (((pos + 1) % 5) == 0)
     {
       pos++; words_index++;
@@ -192,8 +200,8 @@ int main(int args, char **argv)
       continue;
     }
 
-
-    if (*user_input == 32)
+    // Input is space
+    if (user_input[0] == 32)
     {
       index++;
       pos++;
@@ -202,27 +210,12 @@ int main(int args, char **argv)
       continue;
     }
 
-
-    switch(validate_input(*user_input))
-    {
-    case 0:
-        tcflush(STDIN_FILENO, TCIFLUSH);
-        continue;
-    case 1:
-      break;
-    case 2:
-      tc_term_restore(user_input, words, word_count);
-      return EXIT_SUCCESS;
-    }
-
-    check_input(words[words_index], user_input, &index);
+    check_input(ITH_POINTER(words_index, words), user_input, &index);
     pos++;
     tc_move_cursor(cursor_col + pos, cursor_row + 2);
     fflush(stdout);
   }
 
-  free_words(words, word_count);
-  restore_tty(STDIN_FILENO);
-  tc_disable_alt_buff();
+  tc_term_restore(words);
   return EXIT_SUCCESS;
 }

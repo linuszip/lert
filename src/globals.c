@@ -7,7 +7,7 @@ const char *USAGE_MESSAGE =
                       "    -a            Start in normal mode\n"
                       "    -t            Start in tracking mode\n"
                       "    -c file_path  Start with config from file_path\n"
-                      "    -l [1,2,3]    Start in the corresponding level";
+                      "    -l [1,2,3]    Start in the corresponding level\n";
 
 const char *whole_alphabet[] = {
   "a","b","c","d","e","f","g","h","i","j","k","l","m",
@@ -38,4 +38,4 @@ const int upper_row_len =11;
 const int middle_row_len =11;
 const int bottom_row_len =7;
 const int level_two_len = 22;
-const int word_len  = 4;
+const int WORD_LENGTH  = 4;

@@ -30,17 +30,19 @@
 #define tc_move_cursor(x,y) printf("\x1B[%d;%df", y, x)
 #define min(x,y)  (((x) < (y)) ? (x) : (y))
 
+#define WORD_MEM_SIZE 16
+
 
 int utf8_char_memlen(char c);
-char *newWord(const char **alphabet, unsigned int alphabet_len);
+int generateWords(char *word, int word_count, const char **alphabet, unsigned int alphabet_len);
 void check_input(char *current_word, char *s, int *index);
 int new_tty(int fd);
 void tc_get_size(int* rows, int *cols);
 int restore_tty(int fd);
-void free_words(char *words[], int word_count);
+void free_words(char *words);
 int get_word_count(int rows, int cols);
-void print_words(char *words[], int word_count);
-int validate_input(char c);
+void print_words(char *words, int word_count);
+char read_with_timeout(int timeout);
 
 #endif
   

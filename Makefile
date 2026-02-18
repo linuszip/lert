@@ -1,6 +1,6 @@
 CC = cc
 DFLAGS = -Wall -Wextra -g -fsanitize=address
-CFLAGS = -Wall -Wextra -O3
+CFLAGS = -Wall -Wextra 
 BUILD_DIR = build
 VPATH = src
 OBJECTS = $(addprefix $(BUILD_DIR)/, conf.o main.o core.o globals.o)
@@ -14,7 +14,7 @@ build/main.o build/core.o: core.h
 build/main.o:conf.h
 
 $(BUILD_DIR)/%.o: %.c 
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(DFLAGS) -c $< -o $@
 
 $(BUILD_DIR):
 	mkdir build
