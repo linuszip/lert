@@ -96,7 +96,7 @@ int main(int args, char **argv)
   }
 
 
-  /*
+  
   if (!cfg_path)
   {
     cfg_path = config_get_path();    
@@ -107,14 +107,10 @@ int main(int args, char **argv)
   }
   config_t *cfg = config_init();
   config_load(cfg, cfg_path);
-  config_entry_t *entry = cfg->first;
 
-  while (entry) {
-    
-    
-    entry = entry->next;
-  }
-  */
+  int *hello = (int *) config_get(cfg, "alphabet", KEYBOARD_CHARS);
+  printf("pointer %p points to %d", hello, *hello);
+ 
 
   int rows, cols;
   int word_count;

@@ -14,7 +14,7 @@ build/main.o build/core.o: core.h
 build/main.o:conf.h
 
 $(BUILD_DIR)/%.o: %.c 
-	$(CC) $(CFLAGS) $(DFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR):
 	mkdir build

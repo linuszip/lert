@@ -9,16 +9,18 @@
 #define ERROR_UNEXPECTED_SYMBOL "Unexpected symbol at"
 #define ERROR_MISSING_BRACKET "Missing closing } bracket"
 
-#define  INT 1
-#define  KEYBOARD_CHARS 2
-#define  BOOL 3
-#define  STRING 4
+typedef enum {
+  INT,
+  KEYBOARD_CHARS,
+  BOOL,
+  STRING,
+} config_type;
 
 
 typedef struct config_entry
 {
-  char *key;
   void *value;
+  char *key;
   unsigned char type;
   struct config_entry *next;
 } config_entry_t;
@@ -43,8 +45,8 @@ typedef struct config_error
 char *config_get_path();
 config_t *config_init();
 int config_load(config_t *cfg, const char *filename);
-const char *config_get(const char* cfg, const char *key);
 void config_free(config_t *cfg);
+void *config_get(config_t *cfg, const char *key, config_type type);
 
 #endif
 

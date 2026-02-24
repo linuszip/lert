@@ -82,7 +82,7 @@ static config_error_t *error_init(const char *line, int line_nbr, int position, 
 
 
 static int parse_line(const char *line, int line_nbr, char **key, void **value,
-                      config_error_t **error, unsigned char *type)
+                      config_error_t **error, config_type *type)
 {
   const char *begin;
   char *p_line = line;
@@ -134,7 +134,7 @@ static int parse_line(const char *line, int line_nbr, char **key, void **value,
 
   if (*p_line == '{') {
     *type = KEYBOARD_CHARS;
-    begin = p_line;
+    begin = p_line + 1;
     p_line++;
     pos++;
     while (*p_line && isvldvchr((int) *p_line)) {
@@ -146,6 +146,8 @@ static int parse_line(const char *line, int line_nbr, char **key, void **value,
     }
     p_line++;
     pos++;
+    // TODO: Transform string to value
+    *value = strndup(begin, p_line - begin - 2);
     goto end;
   }
 
@@ -181,15 +183,16 @@ static int parse_line(const char *line, int line_nbr, char **key, void **value,
   if (*type == INT) {
     long l = strtol(begin, &p_line, 10);
     if (l > INT_MAX || l < INT_MIN) {
-      
+      *error = ERROR("Expects a valid integer value, value out of range");
+      return 0;
     }
     int val = (int) l;
     *value  = &val;
+  } else {
+    *value = strndup(begin, p_line - begin);
   }
 
   end:
-
-  *value = strndup(begin, p_line - begin);
 
   while (*p_line) {
     if (!isspace((int)*p_line)) {
@@ -212,7 +215,7 @@ int config_load(config_t *cfg, const char *filename)
   char *line, *key;
   void *value;
   config_entry_t **next;
-  unsigned char type;
+  config_type type;
 
   t_p = 0;
   lineNumber = 1;
@@ -228,6 +231,9 @@ int config_load(config_t *cfg, const char *filename)
 
   while (getline(&line, &t_p, config) > 0) {
 
+    // case 0: Error on read
+    // case 1: Normal read of key, value pair
+    // case 2: Empty line
     switch (parse_line(line, lineNumber, &key, &value, &error, &type)) {
       case 0: 
         print_error(error);
@@ -254,28 +260,27 @@ int config_load(config_t *cfg, const char *filename)
         line = NULL;
         continue;
     }
-    // if (!parse_line(line, lineNumber, &key, &value, &error)) {
-    //   print_error(error);
-    //   free(line);
-    //   free(error);
-    //   fclose(config);
-    //   config_free(cfg);
-    //   return 0;
-    // }
-    // *next = malloc(sizeof(config_entry_t));
-    // (*next)->key = key;
-    // (*next)->value = value;
-    // (*next)->next = NULL;
-    // next = &((*next)->next);
-    // lineNumber++;
-    // cfg->count++;
-    // free(line);
-    // line = NULL;
   }
 
   free(line);
   fclose(config);
   return 1;
+}
+
+
+void *config_get(config_t *config, const char *key, config_type type)
+{
+  config_entry_t *entry = config->first;
+
+  if (strncmp(key, entry->key, strlen(key)))
+  {
+    
+  }
+  else
+  {
+    entry = entry->next;  
+  }
+  return NULL;
 }
 
 // int main() {
