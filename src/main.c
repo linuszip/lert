@@ -9,6 +9,8 @@
 #include "globals.h"
 #include "conf.h"
 
+#include <signal.h>
+
 
 int tc_term_restore(char *words)
 {
@@ -96,7 +98,7 @@ int main(int args, char **argv)
   }
 
 
-  
+  raise(SIGTRAP);
   if (!cfg_path)
   {
     cfg_path = config_get_path();    

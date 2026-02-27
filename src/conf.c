@@ -16,6 +16,8 @@ config_t *config_init()
 
 char *config_get_path()
 {
+    char *xdg_config_home = getenv("XDG_CONFIG_HOME");
+    if (xdg_config_home) return xdg_config_home;
     char *prior_dir = getenv("HOME");
     if (!prior_dir) {
       fputs("Error finding the path of the config file", stderr);
@@ -81,23 +83,29 @@ static config_error_t *error_init(const char *line, int line_nbr, int position, 
 #define ERROR(error_msg) error_init(p_line, line_nbr, pos, error_msg)
 
 
-static int parse_line(const char *line, int line_nbr, char **key, void **value,
-                      config_error_t **error, config_type *type)
+static config_entry_t *parse_line(const char *line, int line_nbr, config_error_t **error)
 {
   const char *begin;
   char *p_line = line;
   int pos = 0;
+  config_entry_t *entry = malloc(sizeof(config_entry_t));
+  entry->next = NULL;
 
   while (isspace((unsigned char)*p_line)) {
     p_line++;
     pos++;
   }
 
-  if (!*p_line) return 2;
+  if (!*p_line) {
+    *error = NULL;
+    free(entry);
+    return NULL;
+  }
 
-  if (!isalpha((unsigned char)*p_line)) {
+  if (!isalpha((unsigned char) *p_line)) {
     *error = ERROR(ERROR_UNEXPECTED_SYMBOL);
-    return 0;
+    free(entry);
+    return NULL;
   }
 
   begin = p_line;
@@ -109,10 +117,11 @@ static int parse_line(const char *line, int line_nbr, char **key, void **value,
 
   if (!*p_line) {
     *error = ERROR(ERROR_NO_KEYVAL_PAIR);
-    return 0;
+    free(entry);
+    return NULL;
   }
 
-  *key = strndup(begin, p_line - begin);
+  entry->key = strndup(begin, p_line - begin);
 
   while (isspace((unsigned int) *p_line)) {
     p_line++;
@@ -121,7 +130,8 @@ static int parse_line(const char *line, int line_nbr, char **key, void **value,
 
   if (*p_line != '=') {
     *error = ERROR((!*p_line) ? ERROR_NO_KEYVAL_PAIR : ERROR_UNEXPECTED_SYMBOL);
-    return 0;
+    free(entry);
+    return NULL;
   }
 
   ++p_line;
@@ -131,9 +141,8 @@ static int parse_line(const char *line, int line_nbr, char **key, void **value,
     pos++;
   }
 
-
   if (*p_line == '{') {
-    *type = KEYBOARD_CHARS;
+    entry->type = KEYBOARD_CHARS;
     begin = p_line + 1;
     p_line++;
     pos++;
@@ -147,25 +156,26 @@ static int parse_line(const char *line, int line_nbr, char **key, void **value,
     p_line++;
     pos++;
     // TODO: Transform string to value
-    *value = strndup(begin, p_line - begin - 2);
+    entry->value = strndup(begin, p_line - begin - 2);
     goto end;
   }
 
-  if (!isalnum((unsigned char)*p_line)) {
+  if (!isalnum((unsigned char) *p_line)) {
     *error = ERROR((*p_line) ? ERROR_NO_KEYVAL_PAIR : ERROR_UNEXPECTED_SYMBOL);
-    return 0;
+    free(entry);
+    return NULL;
   }
 
   int (*check)(int);
 
   if (isalpha((int) *p_line)) {
     check = &isalpha;
-    *type = STRING;
+    entry->type = STRING;
   } 
 
   if (isdigit((int) *p_line)) {
     check = &isdigit;
-    *type = INT;
+    entry->type = INT;
   }
 
   begin = p_line;
@@ -177,19 +187,22 @@ static int parse_line(const char *line, int line_nbr, char **key, void **value,
 
   if(*p_line && !isspace((int) *p_line)) {
     *error = ERROR(ERROR_UNEXPECTED_SYMBOL);
-    return 0;
+    free(entry);
+    return NULL;
   }
 
-  if (*type == INT) {
+  if (entry->type == INT) {
     long l = strtol(begin, &p_line, 10);
     if (l > INT_MAX || l < INT_MIN) {
-      *error = ERROR("Expects a valid integer value, value out of range");
-      return 0;
+      *error = ERROR("Expects a valid integer value, but value was out of range");
+      free(entry);
+      return NULL;
     }
-    int val = (int) l;
-    *value  = &val;
+    int *val = malloc(sizeof(int));
+    *val = (int) l;
+    entry->value = val;
   } else {
-    *value = strndup(begin, p_line - begin);
+    entry->value = strndup(begin, p_line - begin);
   }
 
   end:
@@ -197,27 +210,24 @@ static int parse_line(const char *line, int line_nbr, char **key, void **value,
   while (*p_line) {
     if (!isspace((int)*p_line)) {
       *error = ERROR(ERROR_UNEXPECTED_SYMBOL);
-      return 0;
+      free(entry);
+      return NULL;
     }
     p_line++;
   }
 
-  return 1;
+  return entry;
 }
 
 
 int config_load(config_t *cfg, const char *filename)
 {
   FILE *config;
-  size_t t_p;
   int lineNumber;
   config_error_t *error;
-  char *line, *key;
-  void *value;
+  char *line;
   config_entry_t **next;
-  config_type type;
 
-  t_p = 0;
   lineNumber = 1;
   line = NULL;
   error = NULL;
@@ -229,36 +239,29 @@ int config_load(config_t *cfg, const char *filename)
     return 0;
   }
 
-  while (getline(&line, &t_p, config) > 0) {
+  while (getline(&line, NULL, config) > 0) {
 
     // case 0: Error on read
     // case 1: Normal read of key, value pair
     // case 2: Empty line
-    switch (parse_line(line, lineNumber, &key, &value, &error, &type)) {
-      case 0: 
+    if ( !(*next = parse_line(line, lineNumber, &error))) {
+      if (error) {
         print_error(error);
         free(line);
         free(error);
         fclose(config);
         config_free(cfg);
         return 0;
-      case 1:
-        *next = malloc(sizeof(config_entry_t));
-        (*next)->key = key;
-        (*next)->value = value;
-        (*next)->next = NULL;
-        (*next)->type = type;
-        next = &((*next)->next);
-        lineNumber++;
-        cfg->count++;
-        free(line);
-        line = NULL;
-        break;
-      case 2:
-        lineNumber++;
-        free(line);
-        line = NULL;
-        continue;
+      }
+      lineNumber++;
+      free(line);
+      line = NULL;
+    } else {
+      next = &((*next)->next);
+      lineNumber++;
+      cfg->count++;
+      free(line);
+      line = NULL;
     }
   }
 
