@@ -4,8 +4,9 @@ CFLAGS = -Wall -Wextra
 BUILD_DIR = build
 DEBUG_DIR = debug
 VPATH = src
-OBJECTS = $(addprefix $(BUILD_DIR)/, conf.o main.o core.o globals.o)
-DEBUG_OBJS = $(addprefix $(DEBUG_DIR)/, conf.o main.o core.o globals.o)
+# Add conf.o again
+OBJECTS = $(addprefix $(BUILD_DIR)/, main.o core.o globals.o)
+DEBUG_OBJS = $(addprefix $(DEBUG_DIR)/, main.o core.o globals.o)
 
 
 all: $(OBJECTS)

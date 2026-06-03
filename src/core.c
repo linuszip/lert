@@ -149,7 +149,7 @@ int restore_tty(int fd)
     larger or equals to zero, the words that fit the screen. Returns 0 if
     the terminal window is to small.
 */
-int get_word_count(int rows, int cols)
+unsigned get_word_count(int rows, int cols)
 {
   if ((cols < 4) | (rows < 3)) {
     return 0;

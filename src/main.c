@@ -7,7 +7,7 @@
 
 #include "core.h"
 #include "globals.h"
-#include "conf.h"
+// #include "conf.h"
 
 
 
@@ -19,18 +19,17 @@ int tc_term_restore(char *words)
   return EXIT_SUCCESS;
 }
 
-int main(int args, char **argv)
-{
+int main(int args, char **argv) {
   int alpha_size;
-  const char **alphabet;
+  const char** alphabet;
   char opt, *end;  
   unsigned  level;
-  char * cfg_path;
+  char* cfg_path;
 
   alpha_size = wholealpha_size;
   alphabet = whole_alphabet;
   level = 0;
-  cfg_path = NULL;
+  cfg_path = nullptr;
 
 
   while ((opt = getopt(args, argv, "hac:tl:")) != -1)
@@ -112,7 +111,7 @@ int main(int args, char **argv)
  
 
   int rows, cols;
-  int word_count;
+  un word_count;
   tc_get_size(&rows, &cols);
   if ((word_count = get_word_count(rows, cols)) <= 0)
   {
@@ -140,24 +139,21 @@ int main(int args, char **argv)
 
   char user_input[5];
   user_input[4] = '\0';
-  size_t words_index = 0;
-  size_t index       = 0; // Which char in the word to check right now 
-  size_t pos         = 0;
+  unsigned words_index = 0;
+  unsigned index       = 0; // Which char in the word to check right now 
+  unsigned pos         = 0;
 
-  while (1)
-  {
+  while (1) {
     memset(user_input, 0, 5 * sizeof(char));
 
-    if (read(1, user_input, 1) != 1)
-    {
+    if (read(1, user_input, 1) != 1) {
       fputs("Error during read", stderr);
       tc_term_restore(words);
       return EXIT_SUCCESS;
     }
 
 
-    if (*user_input == 27)
-    {
+    if (*user_input == 27) {
       if (read_with_timeout(100) != 1) {
         tc_term_restore(words);
         return EXIT_SUCCESS;
@@ -165,13 +161,11 @@ int main(int args, char **argv)
     }
 
     
-    for (int i = 1; i < utf8_char_memlen(user_input[0]); i++)
-    {
+    for (int i = 1; i < utf8_char_memlen(user_input[0]); i++) {
       user_input[i] = (char) fgetc(stdin);
     }
 
-    if (pos == (word_count * WORD_LENGTH + word_count - 1))
-    {
+    if (pos == (word_count * WORD_LENGTH + word_count - 1)) {
       clear_screen();
       generateWords(words, word_count, alphabet, alpha_size);
 
@@ -185,8 +179,7 @@ int main(int args, char **argv)
     }
 
     // If pos is between two words
-    if (((pos + 1) % 5) == 0)
-    {
+    if (((pos + 1) % 5) == 0) {
       pos++; words_index++;
       index = 0;
       fputs(user_input, stdout);
@@ -196,8 +189,7 @@ int main(int args, char **argv)
     }
 
     // Input is space
-    if (user_input[0] == 32)
-    {
+    if (user_input[0] == 32) {
       index++;
       pos++;
       tc_move_cursor(cursor_col + pos, cursor_row + 2);
