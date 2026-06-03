@@ -22,13 +22,8 @@ int utf8_char_memlen(char c)
 }
 
 
-/*
-  This functions helps to distinguish escape codes from the escape
-  key through checking, if within a certain timeout stdin becomes
-  readable again. Returns 1 if it does so, which the user has typed
-  in an escape code.
-*/
 char read_with_timeout(int timeout_ms) {
+
     struct timeval tv;
     fd_set readfds;
     

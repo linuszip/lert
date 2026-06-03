@@ -1,5 +1,5 @@
 CC = cc
-DFLAGS = -Wall -Wextra -g 
+DFLAGS = -Wall -Wextra -ggdb
 CFLAGS = -Wall -Wextra 
 BUILD_DIR = build
 DEBUG_DIR = debug

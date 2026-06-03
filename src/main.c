@@ -2,14 +2,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <stdio.h>
-#include <time.h>
 
 #include "core.h"
 #include "globals.h"
 #include "conf.h"
 
-#include <signal.h>
 
 
 int tc_term_restore(char *words)
@@ -20,13 +19,12 @@ int tc_term_restore(char *words)
   return EXIT_SUCCESS;
 }
 
-
 int main(int args, char **argv)
 {
   int alpha_size;
   const char **alphabet;
   char opt, *end;  
-  long level;
+  unsigned  level;
   char * cfg_path;
 
   alpha_size = wholealpha_size;
@@ -40,7 +38,7 @@ int main(int args, char **argv)
     switch (opt)
     {
       case 'h':
-        fputs(USAGE_MESSAGE, stderr);
+        fputs(USAGE_MESSAGE, stdout);
         return 0;
       case 'a':
         alphabet = whole_alphabet;
@@ -98,20 +96,19 @@ int main(int args, char **argv)
   }
 
 
-  raise(SIGTRAP);
-  if (!cfg_path)
-  {
-    cfg_path = config_get_path();    
-  } 
-  if(!cfg_path)
-  {
-    return EXIT_FAILURE;
-  }
-  config_t *cfg = config_init();
-  config_load(cfg, cfg_path);
+  // if (!cfg_path)
+  // {
+  //   cfg_path = config_get_path();    
+  // } 
+  // if(!cfg_path)
+  // {
+  //   return EXIT_FAILURE;
+  // }
+  // config_t *cfg = config_init();
+  // config_load(cfg, cfg_path);
 
-  int *hello = (int *) config_get(cfg, "alphabet", KEYBOARD_CHARS);
-  printf("pointer %p points to %d", hello, *hello);
+  // int *hello = (int *) config_get(cfg, "alphabet", KEYBOARD_CHARS);
+  // printf("pointer %p points to %d", hello, *hello);
  
 
   int rows, cols;
@@ -128,7 +125,7 @@ int main(int args, char **argv)
   // Generate words
   char *words = malloc(sizeof(char) * word_count * (WORD_MEM_SIZE +1));
   if (!words) {
-    fputs("Error during malloc", stderr);
+    fputs("Error, not enough memory available.", stderr);
     return EXIT_FAILURE;
   }
   generateWords(words, word_count, alphabet, alpha_size);
@@ -143,13 +140,13 @@ int main(int args, char **argv)
 
   char user_input[5];
   user_input[4] = '\0';
-  int words_index = 0;
-  int index       = 0; // Which char in the word to check right now 
-  int pos         = 0;
+  size_t words_index = 0;
+  size_t index       = 0; // Which char in the word to check right now 
+  size_t pos         = 0;
 
   while (1)
   {
-    memset(user_input, 0, 5);
+    memset(user_input, 0, 5 * sizeof(char));
 
     if (read(1, user_input, 1) != 1)
     {
