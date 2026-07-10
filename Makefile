@@ -1,6 +1,6 @@
 CC = cc
 DFLAGS = -Wall -Wextra -ggdb
-CFLAGS = -Wall -Wextra 
+CFLAGS = -Wall -Wextra -std=c23
 BUILD_DIR = build
 DEBUG_DIR = debug
 VPATH = src

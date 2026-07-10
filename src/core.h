@@ -40,7 +40,7 @@ int new_tty(int fd);
 void tc_get_size(int* rows, int *cols);
 int restore_tty(int fd);
 void free_words(char *words);
-int get_word_count(int rows, int cols);
+unsigned get_word_count(int rows, int cols);
 void print_words(char *words, int word_count);
 char read_with_timeout(int timeout);
 

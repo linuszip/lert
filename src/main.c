@@ -1,9 +1,11 @@
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
+#include <wchar.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include "core.h"
 #include "globals.h"
@@ -23,7 +25,7 @@ int main(int args, char **argv) {
   int alpha_size;
   const char** alphabet;
   char opt, *end;  
-  unsigned  level;
+  uint8_t level;
   char* cfg_path;
 
   alpha_size = wholealpha_size;

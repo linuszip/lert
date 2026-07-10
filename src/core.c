@@ -2,13 +2,14 @@
 #include "globals.h"
 #include <string.h>
 #include <termios.h>
-#include <ctype.h>
 #include <time.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+
 
 struct termios BACKUP_TTY;
 
@@ -23,7 +24,6 @@ int utf8_char_memlen(char c)
 
 
 char read_with_timeout(int timeout_ms) {
-
     struct timeval tv;
     fd_set readfds;
     
